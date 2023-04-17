@@ -18,7 +18,7 @@ module.exports = class User extends Sequelize.Model {
                 profile: {
                     type: Sequelize.STRING(100),
                     allowNull: true,
-                    defaultValue: config.get('default.profile')
+                    defaultValue: config.get('s3.basic_image')
                 },
                 user_name: {
                     type: Sequelize.STRING(30),
