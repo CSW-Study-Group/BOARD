@@ -9,7 +9,7 @@
     <%- include('../partials/nav') %>
     <div class="container mb-3">
         <h2 class="mb-3"><b>Board</b></h2>
-        <table class="board-table table table-sm border-bottom">
+        <table class="board-table table table-sm border-bottom shadow rounded">
             <thead class="thead-light">
                 <tr>
                     <th scope="col" class="id">#</th>
@@ -39,7 +39,7 @@
                         </td>
                         <td class="views"><%= post.view %></td>
                         <td class="views"><%= post.recommand %></td>
-                        <td class="profile"><img src="<%= post.User.profile %>" width=25 height=25></td>
+                        <td class="profile"><img src="<%= post.User.profile %>" class="rounded-circle" alt="..." width=25 height=25></td>
                         <td class="writer">
                             <a href="/board<%= getPostQueryString(false, { searchType:'author!', searchText:post.User.user_name, page:1 }) %>">
                                 <div data-search-highlight="author" class="ellipsis"><%= post.User ? post.User.user_name : "" %></div>
