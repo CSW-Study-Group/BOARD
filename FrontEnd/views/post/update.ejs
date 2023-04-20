@@ -20,11 +20,11 @@
         <form>
             <div class="form-group">
                 <label for="title">제목</label>
-                <input class="form-control" name="title" value="<%= post.title %>" type="text">
+                <input class="form-control shadow rounded" name="title" value="<%= post.title %>" type="text">
             </div>
             <div class="form-group">
                 <label for="body">내용</label>
-                <textarea class="form-control" name="body" rows="5"><%= post.content %></textarea>
+                <textarea class="form-control shadow rounded" name="body" rows="5"><%= post.content %></textarea>
             </div>
             <div>
                 <a class="btn btn-secondary" href="/board/<%= post.id %><%= getPostQueryString() %>">Back</a>

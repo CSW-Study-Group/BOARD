@@ -1,5 +1,5 @@
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
 }
 
 .breadcrumb-item {
@@ -14,6 +14,7 @@ body {
   text-overflow: ellipsis;
 }
 
+/* board */
 .board-table {
   table-layout: fixed;
 }
@@ -40,22 +41,13 @@ body {
   text-align: center;
 }
 
-.board-table .title-container:hover .title-comments,
-.board-table .title-container:hover .title-text {
-  text-decoration: underline;
-}
-
-.post-body,
-.comment-body {
+/* post */
+.post-body {
   white-space: pre-line;
 }
 
 .post-info {
   font-size: 0.8em;
-}
-
-.user-form {
-  width: 400px;
 }
 
 .post-index-tool {
@@ -66,29 +58,7 @@ body {
   max-width: 130px;
 }
 
-.highlighted {
-  color: rgb(26, 190, 26);
-}
-
-a {
-  color: rgb(0, 0, 0);
-  font-weight: bold;
-}
-
-.page-link {
-  color: #6c757d;
-}
-
-.btn-link {
-  color: #36455d;
-  font-weight: bold;
-}
-
-.page-item.active .page-link {
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
+/* profile  */
 .box {
   margin-top: 15px;
   width: 200px;
@@ -101,4 +71,29 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* a, button option */
+a {
+  color: rgb(0, 0, 0);
+  font-weight: bold;
+}
+
+.page-item.active .page-link {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.page-link {
+  color: #6c757d;
+}
+
+.btn-link {
+  color: #888786;
+  font-weight: bold;
+}
+
+/* other option */
+.highlighted {
+  color: rgb(26, 190, 26);
 }
