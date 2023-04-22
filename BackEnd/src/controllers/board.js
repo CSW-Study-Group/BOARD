@@ -45,12 +45,16 @@ const boardGet = async (req, res) => {
         ],
       };
     } else if (searchQuery.length === 1) {
-      if (key[0] === 'title') {
-        where_content = { title: { [Op.like]: `%${searchQuery[0].title}%` } };
-      } else if (key[0] === 'body') {
-        where_content = { content: { [Op.like]: `%${searchQuery[0].body}%` } };
-      } else if (key[0] === 'user_name') {
-        where_user = { user_name: searchQuery[0].user_name };
+      switch (key[0]) {
+        case 'title':
+          where_content = { title: { [Op.like]: `%${searchQuery[0].title}%` } };
+          break;
+        case 'body':
+          where_content = { content: { [Op.like]: `%${searchQuery[0].body}%` } };
+          break;
+        case 'user_name':
+          where_user = { user_name: searchQuery[0].user_name };
+          break;
       }
     }
 
