@@ -17,6 +17,17 @@ app.use(methodOverride('_method'));
 
 // 라우팅
 const apiRouter = require('./src/routes');
+const blockedIps = [];
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+
+  if (blockedIps.includes(ip)) {
+    res.status(403).send('Access denied.');
+  } else {
+    next();
+  }
+});
 
 app.use('/', apiRouter);
 
