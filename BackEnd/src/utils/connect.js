@@ -1,35 +1,27 @@
 'use strict';
 
 const Sequelize = require('sequelize');
-const User = require('../models/user');
-const Post = require('../models/post');
-const Log = require('../models/log');
-
-// 데이터베이스 설정을 불러옴
 const config = require('config');
 
-// new Sequelize를 통해 MySQL 연결 객체를 생성한다.
+const models = require('../models/index');
+
 const sequelize = new Sequelize(
     config.get('mysql.database'),
     config.get('mysql.username'),
     config.get('mysql.password'),
-    { host: config.get('mysql.host'), dialect: config.get('mysql.dialect') },
+    {
+        host: config.get('mysql.host'),
+        dialect: config.get('mysql.dialect'),
+        timezone: config.get('mysql.timezone'), // Asia/Seoul: +09:00
+    },
 );
 
-// 연결 객체를 나중에 재사용하기 위해 db.sequelize에 넣어둔다.
-const db = {};
+Object.values(models).forEach((model) => model.init(sequelize));
+Object.values(models)
+    .filter((model) => typeof model.associate === 'function')
+    .forEach((model) => model.associate(models));
 
-db.sequelize = sequelize;
-db.User = User;
-db.Post = Post;
-db.Log = Log;
-
-User.init(sequelize);
-Post.init(sequelize);
-Log.init(sequelize);
-
-User.associate(db);
-Post.associate(db);
-Log.associate(db);
-
-module.exports = db;
+module.exports = {
+    sequelize,
+    ...models,
+};

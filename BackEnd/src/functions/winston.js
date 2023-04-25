@@ -21,6 +21,7 @@ class CustomTransport extends Transport {
         const message = info.message.split(' ')[1].replace(/"/g, '');
         const status = parseInt(info.message.split(' ')[3]);
         const response_time = parseFloat(info.message.split(' ')[4]);
+        const ip = info.message.split(' ')[6];
 
         if (!/^\/(js|css)/.test(message)) { // '/js' 또는 '/css'가 앞에 없는 경우
             Log.create({
@@ -29,6 +30,7 @@ class CustomTransport extends Transport {
                 message: message,
                 status: status,
                 response_time: response_time,
+                ip: ip,
             }).then(() => {
                 callback();
             });
