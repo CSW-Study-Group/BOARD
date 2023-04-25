@@ -18,7 +18,7 @@ const api_router = require('./src/routes');
 const blocked_ips = [];
 
 app.use((req, res, next) => {
-  const ip = req.ip;
+  const ip = req.ip.replace(/^.*:/, "");
 
   if (blocked_ips.includes(ip)) {
     res.status(403).send('Access denied.');
