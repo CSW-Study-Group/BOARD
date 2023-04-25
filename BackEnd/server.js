@@ -11,25 +11,23 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(morgan(':method ":url HTTP/:http-version" :status :response-time ms', { stream: logger.stream }));
-
 app.use(methodOverride('_method'));
 
 // 라우팅
-const apiRouter = require('./src/routes');
-const blockedIps = [];
+const api_router = require('./src/routes');
+const blocked_ips = [];
 
 app.use((req, res, next) => {
   const ip = req.ip;
 
-  if (blockedIps.includes(ip)) {
+  if (blocked_ips.includes(ip)) {
     res.status(403).send('Access denied.');
   } else {
-    next();
+    morgan(`:method ":url HTTP/:http-version" :status :response-time ms ${ip}`, { stream: logger.stream })(req, res, next);
   }
 });
 
-app.use('/', apiRouter);
+app.use('/', api_router);
 
 // 연결
 app.listen(config.get('server.port'), () => {
