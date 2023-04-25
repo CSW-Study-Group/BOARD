@@ -1,20 +1,7 @@
 'use strict';
 
-// 모듈
-const express = require('express');
-const app = express();
-
-const { sequelize } = require('./src/utils/connect');
-
-const morgan = require('morgan'); // log
-const logger = require('./src/functions/winston');
-
-app.use(morgan(':method ":url HTTP/:http-version" :status :response-time ms', { stream: logger.stream }));
-
-const bodyParser = require('body-parser');
-const config = require('config');
-
-const methodOverride = require("method-override");
+const { app, express, bodyParser } = require('./loaders/express');
+const { sequelize, morgan, logger, config, methodOverride } = require('./loaders/module');
 
 // 웹 세팅
 app.use(express.static('../FrontEnd/public'));
@@ -24,18 +11,30 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(methodOverride("_method"));
+app.use(methodOverride('_method'));
 
 // 라우팅
-const apiRouter = require('./src/routes');
+const api_router = require('./src/routes');
+const blocked_ips = [];
 
-app.use('/', apiRouter);
+app.use((req, res, next) => {
+  const ip = req.ip;
+
+  if (blocked_ips.includes(ip)) {
+    res.status(403).send('Access denied.');
+  } else {
+    morgan(`:method ":url HTTP/:http-version" :status :response-time ms ${ip}`, { stream: logger.stream })(req, res, next);
+  }
+});
+
+app.use('/', api_router);
 
 // 연결
 app.listen(config.get('server.port'), () => {
-    console.log(`Server Running On ${config.get('server.port')} Port!`);
+  console.log(`Server Running On ${config.get('server.port')} Port!`);
 });
 
-sequelize.sync({ force: false })
-    .then(() => { console.log('Success Connecting DB!'); })
-    .catch((err) => { console.error(err); });
+sequelize
+  .sync({ force: false })
+  .then(() => { console.log('Success Connecting DB!'); })
+  .catch((err) => { console.error(err); });

@@ -33,6 +33,10 @@ module.exports = class Log extends Sequelize.Model {
                     type: Sequelize.FLOAT,
                     allowNull: false,
                 },
+                ip: {
+                    type: Sequelize.STRING(30),
+                    allowNull: false,
+                },
                 created_at: {
                     type: Sequelize.DATE,
                     allowNull: false,
