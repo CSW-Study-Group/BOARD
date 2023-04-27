@@ -9,10 +9,13 @@ const config = require('config');
 
 const methodOverride = require('method-override');
 
+const sentry = require('@sentry/node');
+
 module.exports = {
   sequelize,
   morgan,
   logger,
   config,
   methodOverride,
+  sentry
 };
