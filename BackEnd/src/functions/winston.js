@@ -93,7 +93,7 @@ const logger = createLogger({
 });
 
 //실제 서비스중인 서버가 아니면
-if (config.get('server.state') !== 'production') {
+if (config.get('server.status') !== 'production') {
     logger.add(
         new transports.Console({
             format: combine(colorize({ all: true }), print_format),

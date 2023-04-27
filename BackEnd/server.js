@@ -1,7 +1,7 @@
 'use strict';
 
 const { app, express, bodyParser } = require('./loaders/express');
-const { sequelize, morgan, logger, config, methodOverride } = require('./loaders/module');
+const { sequelize, morgan, logger, config, methodOverride, sentry } = require('./loaders/module');
 
 // 웹 세팅
 app.use(express.static('../FrontEnd/public'));
@@ -12,6 +12,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(methodOverride('_method'));
+
+sentry.init({ // 모든 요청 트래킹
+  dsn: config.get('server.dsn'),
+  integrations: [
+    new sentry.Integrations.Http({ tracing: true }),
+    new sentry.Integrations.Express({ app }),
+  ],
+  tracesSampleRate: 1.0,
+  enabled: config.get('server.status') !== 'production' ? false : true,
+});
+
+app.use(sentry.Handlers.requestHandler()); // 요청정보 캡처
+app.use(sentry.Handlers.tracingHandler()); // 성능정보 캡처
+app.use(sentry.Handlers.errorHandler()); // 에러정보 캡처
 
 // 라우팅
 const api_router = require('./src/routes');
