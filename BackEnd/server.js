@@ -14,12 +14,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
 sentry.init({ // 모든 요청 트래킹
-  dsn: `${config.get('server.dsn')}`,
+  dsn: config.get('server.dsn'),
   integrations: [
     new sentry.Integrations.Http({ tracing: true }),
     new sentry.Integrations.Express({ app }),
   ],
   tracesSampleRate: 1.0,
+  enabled: config.get('server.status') !== 'production' ? false : true,
 });
 
 app.use(sentry.Handlers.requestHandler()); // 요청정보 캡처
