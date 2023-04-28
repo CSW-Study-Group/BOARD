@@ -28,31 +28,23 @@ const boardGet = async (req, res) => {
 
     let where_content = null, where_user = null;
 
-    page = !isNaN(page) ? page : 1;
-    if(page > 1000) {
+    const rendering = (res, posts, message, currentPage = 1, maxPage = 1, limit = 5) => {
         return res.render('post/index', {
-            posts: [],
-            currentPage: 1,
-            maxPage: 1,
-            limit: 5,
+            posts: posts,
+            currentPage: currentPage,
+            maxPage: maxPage,
+            limit: limit,
             searchType: req.query.searchType,
             searchText: req.query.searchText,
-            error: 'Page can only be a number less than 1000.',
+            error: message,
         });
-    }
+    };
+
+    page = !isNaN(page) ? page : 1;
+    if(page > 1000) { return rendering(res, [], 'Page can only be a number less than 1000.'); }
 
     limit = !isNaN(limit) ? limit : 10;
-    if([5, 10, 20].indexOf(limit) === -1) {
-        return res.render('post/index', {
-            posts: [],
-            currentPage: 1,
-            maxPage: 1,
-            limit: 5,
-            searchType: req.query.searchType,
-            searchText: req.query.searchText,
-            error: 'Limit can only be 5, 10, 20.',
-        });
-    }
+    if([5, 10, 20].indexOf(limit) === -1) { return rendering(res, [], 'Limit can only be 5, 10, 20.'); }
 
     try {
         let searchQuery = await createSearchQuery(req.query);
@@ -92,15 +84,7 @@ const boardGet = async (req, res) => {
             limit: Math.max(1, limit),
             offset: (Math.max(1, page) - 1) * Math.max(1, limit),
         }).then((data) => {
-            res.render('post/index', {
-                posts: data.rows,
-                currentPage: page,
-                maxPage: Math.ceil(data.count / Math.max(1, limit)),
-                limit: limit,
-                searchType: req.query.searchType,
-                searchText: req.query.searchText,
-                error: null
-            });
+            return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
         })
     } catch (err) {
         return res.status(500).json({ code: 500, message: err.message });
