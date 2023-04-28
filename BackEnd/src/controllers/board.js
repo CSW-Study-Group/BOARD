@@ -26,7 +26,7 @@ const { Op } = require('sequelize');
  * @returns {Object} 게시글 정보
  */
 const boardGet = async (req, res) => {
-  let { page, limit } = req.query;
+  let { page, limit, searchType, searchText } = req.query;
   let where_content = null,
     where_user = null;
 
@@ -64,8 +64,8 @@ const boardGet = async (req, res) => {
         currentPage: page,
         maxPage: Math.ceil(data.count / Math.max(1, parseInt(limit))),
         limit: limit,
-        searchType: req.query.searchType,
-        searchText: req.query.searchText,
+        searchType: searchType,
+        searchText: searchText,
       });
     });
   } catch (err) {
@@ -78,11 +78,15 @@ const boardGet = async (req, res) => {
  *
  * @returns {Object} 게시글 정보
  */
-const boardGetByPostId = (req, res) => {
+const boardGetByPostId = async (req, res) => {
   const { id: post_id } = req.params;
 
   try {
-    searchByPostId(post_id, res);
+    let data = await searchByPostId(post_id);
+    if (data == null) {
+      throw new Error('non-existent id');
+    }
+    res.render('post/read', { post: data });
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
   }
@@ -135,12 +139,13 @@ const boardDeleteByPostId = (req, res) => {
 /**
  * 게시글에 대한 추천을 한다. (추천 O -> 추천 X) (추천 X -> 추천 O)
  */
-const boardRecommand = (req, res) => {
+const boardRecommand = async (req, res) => {
   let user_id = req.decoded.id;
   let content_id = req.params.id;
 
   try {
-    recommandBoard(user_id, content_id, res);
+    const result = await recommandBoard(user_id, content_id);
+    return res.status(result.code).json(result);
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
   }
@@ -205,8 +210,8 @@ const postView = (req, res) => {
  * 게시글 수정 페이지를 렌더링하면서, 해당 게시글의 정보를 함께 전달한다.
  */
 const editViewByPostId = async (req, res) => {
-  const { id: id } = req.params;
-  let data = await editView(id);
+  const { id: post_id } = req.params;
+  let data = await editView(post_id);
   res.render('post/update', { post: data });
 };
 

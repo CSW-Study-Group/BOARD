@@ -23,7 +23,7 @@ router.post(
   ctrl.boardPost,
 );
 
-router.get('/:id', ctrl.boardGetByPostId);
+router.get('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardGetByPostId);
 router.delete('/:id', ctrl.boardDeleteByPostId);
 router.patch(
   '/:id',
