@@ -1,7 +1,5 @@
 'use strict';
 
-const { User } = require('../utils/connect');
-
 const user = require('../services/user');
 
 /**
@@ -16,27 +14,29 @@ const loginPost = async (req, res) => {
   let { email, password } = req.body;
   try {
     await user.loginCheck(email, password).then((result) => {
-      console.log(result);
-      switch (result.result) {
-        case 'Unauthorized email.':
+      switch (result.message) {
+        case 'Unauthorized email.': {
           return res.status(405).json({
-            message: result.result,
+            message: result.message,
             code: 405,
           });
-        case 'Incorrect password.':
+        }
+        case 'Incorrect password.': {
           return res.status(405).json({
-            message: result.result,
+            message: result.message,
             code: 405,
           });
-        case 'Authorize success.':
+        }
+        case 'Authorize success.': {
           let access_token = result.access_token;
           let refresh_token = result.refresh_token;
           return res.status(200).json({
-            message: result.result,
+            message: result.message,
             code: 200,
             access_token,
             refresh_token,
           });
+        }
         default:
           console.log('service error'); // 로그로 바꾸기 필요
           break;
@@ -62,38 +62,44 @@ const registerPost = async (req, res) => {
   let { email, password, user_name } = req.body;
 
   try {
-    await user.registerCheck(email, password, user_name).then((result) => {
-      switch (result) {
-        case 'Exist username.':
+    await user.registerCheck(email, password, user_name).then((message) => {
+      switch (message) {
+        case 'Exist username.': {
           return res.status(409).json({
-            message: result,
+            message: message,
             code: 409,
           });
-        case 'Exist email.':
+        }
+        case 'Exist email.': {
           return res.status(409).json({
-            message: result,
+            message: message,
             code: 409,
           });
-        case 'Please input username.':
+        }
+        case 'Please input username.': {
           return res.status(405).json({
-            message: result,
+            message: message,
             code: 405,
           });
-        case 'Please input id.':
+        }
+        case 'Please input id.': {
           return res.status(405).json({
-            message: result, // ID가 아니라 email로 바꾸는 건?
+            message: message, // ID가 아니라 email로 바꾸는 건?
             code: 405,
           });
-        case 'Please input password.':
+        }
+        case 'Please input password.': {
           return res.status(405).json({
-            message: result,
+            message: message,
             code: 405,
           });
-        case 'register pass':
+        }
+        case 'register pass': {
           user.createUser(email, password, user_name);
           return res.status(200).json({
             code: 200,
           });
+        }
         default:
           console.log('service error'); // 로그로 바꾸기 필요
           break;
@@ -115,6 +121,10 @@ const profileGet = async (req, res) => {
 
 /**
  * 사용자에게, username, email을 입력받아 프로필을 편집합니다.
+ * @param {string} user_name
+ * @param {string} email
+ *
+ * @returns {object} { code: number, message: string }
  *  - username, email이 다른 사용자가 사용하고 있을 시, 409 반환
  *  - username, email 변동없을 시 편집 정상 수행
  */
@@ -124,38 +134,41 @@ const profileEdit = async (req, res) => {
 
   try {
     let result = await user.newprofileEdit(user_id, email, user_name, req.file);
-    console.log('----');
-    console.log(result);
-    switch (result.result) {
-      case 'Profile type must be only image.':
+    switch (result.message) {
+      case 'Profile type must be only image.': {
         return res.status(400).json({
-          message: result.result,
+          message: result.message,
           code: 400,
         });
-      case 'Profile no change.':
+      }
+      case 'Profile no change.': {
         return res.status(200).json({
-          message: result.result,
+          message: result.message,
           code: 200,
           data: result.user,
         });
-      case 'The username is already in use.':
+      }
+      case 'The username is already in use.': {
         return res.status(409).json({
-          message: result.result,
+          message: result.message,
           code: 409,
         });
-      case 'The email is already in use.':
+      }
+      case 'The email is already in use.': {
         return res.status(409).json({
-          message: result.result,
+          message: result.message,
           code: 409,
         });
-      case 'Profile Edit Success!':
+      }
+      case 'Profile Edit Success!': {
         return res.status(200).json({
-          message: result.result,
+          message: result.message,
           code: 200,
           data: result.data,
         });
+      }
       default:
-        console.log('ERR');
+        console.log('service error'); // 로그로 바꾸기 필요
         break;
     }
   } catch (err) {

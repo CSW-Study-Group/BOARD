@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt');
 /**
  * email 검색 후 return
  * @param {string} email
- * @returns {object} {DB data}
+ * @returns {object} { DB data }
  */
 const emailSearch = async (email) => {
   return await User.findOne({ where: { email: email } });
@@ -18,7 +18,7 @@ const emailSearch = async (email) => {
 /**
  *  id 검색 후 return
  * @param {number} id
- * @returns {object} {DB data}
+ * @returns {object} { DB data }
  */
 const idSearch = async (id) => {
   return await User.findOne({ where: { id: id } });
@@ -45,29 +45,29 @@ const createUser = async (email, password, user_name) => {
  * @param {string} email
  * @param {string} password
  *
- * @returns {object} { result: string, access_token: string, refresh_token: string }
+ * @returns {object} { message: string, access_token: string, refresh_token: string }
  */
 const loginCheck = async (email, password) => {
-  let result = '';
+  let message = '';
   return await emailSearch(email) // email 검색
     .then(async (user) => {
       if (user === null) {
         // email검색 실패(계정 없음)
-        result = 'Unauthorized email.';
-        return { result };
+        message = 'Unauthorized email.';
+        return { message };
       }
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
         // 비밀번호 틀림
-        result = 'Incorrect password.';
-        return { result };
+        message = 'Incorrect password.';
+        return { message };
       } else {
         // 비밀번호 맞음
         let access_token = await accessToken({ type: 'JWT', id: user.id });
         let refresh_token = await refreshToken({ type: 'JWT', id: user.id });
-        result = 'Authorize success.';
+        message = 'Authorize success.';
         return {
-          result,
+          message,
           access_token,
           refresh_token,
         };
@@ -115,40 +115,42 @@ const registerCheck = async (email, password, user_name) => {
 
 /**
  * 사용자에게, username, email을 입력받아 프로필을 편집합니다.
- *  - username, email이 다른 사용자가 사용하고 있을 시, 409 반환
- *  - username, email 변동없을 시 편집 정상 수행
+ * @param {number} user_id
+ * @param {string} email
+ * @param {string} user_name
+ * @param {any} file
+ *
+ * @returns {Object} { message: string, user | data : DBdata }
  */
-const newprofileEdit = async (user_id, email, user_name, file) => {
+const editProfile = async (user_id, email, user_name, file) => {
   const db_option = {
     user_name,
     email,
     ...(file && { profile: file.location }),
     // { profile: req.file.location } 객체가 req.file이 undefined이 아닌 경우에만 포함
   };
-  let result = '';
+  let message = '';
   if (file && !file.mimetype.startsWith('image/')) {
     // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
-    console.log('이미지 에러');
-    result = 'Profile type must be only image.';
-    return { result };
+    message = 'Profile type must be only image.';
+    return { message };
   }
   const user = await User.findByPk(user_id);
   if (user_name === user.user_name && email === user.email && file === undefined) {
-    console.log('프로필 안바뀜');
-    result = 'Profile no change.';
-    return { result, user };
+    message = 'Profile no change.';
+    return { message, user };
   }
 
   const check_username = await User.findOne({ where: { user_name } });
   if (check_username && check_username.user_name !== user.user_name) {
-    result = 'The username is already in use.';
-    return { result };
+    message = 'The username is already in use.';
+    return { message };
   }
 
   const check_email = await emailSearch(email);
   if (check_email && check_email.email !== user.email) {
-    result = 'The email is already in use.';
-    return { result };
+    message = 'The email is already in use.';
+    return { message };
   }
 
   return User.update(db_option, {
@@ -157,8 +159,8 @@ const newprofileEdit = async (user_id, email, user_name, file) => {
     return User.findOne({
       where: { id: user_id },
     }).then((data) => {
-      result = 'Profile Edit Success!';
-      return { result, data };
+      message = 'Profile Edit Success!';
+      return { message, data };
     });
   });
 };
@@ -168,5 +170,5 @@ module.exports = {
   registerCheck,
   createUser,
   idSearch,
-  newprofileEdit,
+  editProfile,
 };
