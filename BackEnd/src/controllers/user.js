@@ -1,10 +1,8 @@
 'use strict';
 
 const { User } = require('../utils/connect');
-const { Op } = require('sequelize');
 
-const { accessToken, refreshToken } = require('../functions/signJWT');
-const bcrypt = require('bcrypt');
+const user = require('../services/user');
 
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
@@ -14,34 +12,35 @@ const bcrypt = require('bcrypt');
  *
  * @returns {object} { code: number, message: string, access_token: string, refresh_token: string }
  */
-const loginPost = (req, res) => {
+const loginPost = async (req, res) => {
     let { email, password } = req.body;
-
     try {
-        User.findOne({ where: { email: email } })
-            .then(async (user) => {
-                if (user) { // email로 찾았다면,
-                    const match = await bcrypt.compare(password, user.password);
-                    if (!match) { // 비밀번호 틀림
+        await user.loginCheck(email, password)
+            .then((result) => {
+                console.log(result);
+                switch (result.result) {
+                    case 'Unauthorized email.':
                         return res.status(405).json({
-                            message: 'Incorrect password.',
+                            message: result.result,
                             code: 405,
                         });
-                    } else { // 비밀번호 맞음
-                        let access_token = await accessToken({ type: 'JWT', id: user.id });
-                        let refresh_token = await refreshToken({ type: 'JWT', id: user.id });
+                    case 'Incorrect password.':
+                        return res.status(405).json({
+                            message: result.result,
+                            code: 405,
+                        });
+                    case 'Authorize success.':
+                        let access_token = result.access_token;
+                        let refresh_token = result.refresh_token;
                         return res.status(200).json({
-                            message: 'Authorize success.',
+                            message: result.result,
                             code: 200,
                             access_token,
                             refresh_token,
                         });
-                    }
-                } else { // 찾는 유저가 없을때
-                    return res.status(405).json({
-                        message: 'Unauthorized email.',
-                        code: 405,
-                    });
+                    default:
+                        console.log('service error'); // 로그로 바꾸기 필요
+                        break;
                 }
             });
     } catch (err) {
@@ -60,58 +59,48 @@ const loginPost = (req, res) => {
  *
  * @returns {object} { code: number, message: string }
  */
-const registerPost = (req, res) => {
+const registerPost = async (req, res) => {
     let { email, password, user_name } = req.body;
 
     try {
-        User.findOne({ where: { [Op.or]: [{ email: email }, { user_name: user_name }] } })
-            .then(async (data) => {
-                let exist_data = JSON.stringify(data); // 객체(Object) -> JSON
-                exist_data = JSON.parse(exist_data); // JSON -> 객체(Object)
-
-                if (exist_data !== null) { // 찾는 데이터가 있을때
-                    if (exist_data.user_name === user_name) {
+        await user.registerCheck(email, password, user_name)
+            .then((result) => {
+                switch (result) {
+                    case 'Exist username.':
                         return res.status(409).json({
-                            message: 'Exist username.',
+                            message: result,
                             code: 409,
                         });
-                    } else {
+                    case 'Exist email.':
                         return res.status(409).json({
-                            message: 'Exist email.',
+                            message: result,
                             code: 409,
                         });
-                    }
-                } else { // 찾는 이메일, 닉네임이 없을 경우 (중복 X)
-                    if (user_name === '') {
+                    case 'Please input username.':
                         return res.status(405).json({
-                            message: 'Please input username.',
+                            message: result,
                             code: 405,
                         });
-                    } else if (email === '') {
+                    case 'Please input id.':
                         return res.status(405).json({
-                            message: 'Please input id.',
+                            message: result, // ID가 아니라 email로 바꾸는 건?
                             code: 405,
                         });
-                    } else if (password === '') {
+                    case 'Please input password.':
                         return res.status(405).json({
-                            message: 'Please input password.',
+                            message: result,
                             code: 405,
                         });
-                    } else {
-                        const encrypted_pw = await bcrypt.hash(password, 10);
-
-                        User.create({
-                            user_name: user_name,
-                            email: email,
-                            password: encrypted_pw,
-                        }).then(() => {
-                            return res.status(200).json({
-                                code: 200,
-                            });
-                        })
-                    }
+                    case 'register pass':
+                        user.createUser(email, password, user_name);
+                        return res.status(200).json({
+                            code: 200,
+                        });
+                    default:
+                        console.log('service error'); // 로그로 바꾸기 필요
+                        break;
                 }
-        });
+            });
     } catch (err) {
         return res.status(500).json({ code: 500, message: err.message });
     }
@@ -121,11 +110,10 @@ const registerPost = (req, res) => {
  * 사용자의 id를 통해 프로필을 조회한다.
  */
 const profileGet = async (req, res) => {
-    User.findOne({
-        where: { id: req.decoded.id },
-    }).then((data) => {
-        return res.status(200).json({ code: 200, data: data });
-    })
+    user.idSearch(req.decoded.id)
+        .then((data) => {
+            return res.status(200).json({ code: 200, data: data });
+        })
 };
 
 /**
@@ -137,60 +125,42 @@ const profileEdit = async (req, res) => {
     let { user_name, email } = req.body;
     let user_id = req.decoded.id;
 
-    const db_option = {
-        user_name,
-        email,
-        ...(req.file && { profile: req.file.location }),
-        // { profile: req.file.location } 객체가 req.file이 undefined이 아닌 경우에만 포함
-    };
-
-    if (req.file && !req.file.mimetype.startsWith('image/')) {
-        // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
-        return res.status(400).json({
-            message: 'Profile type must be only image.',
-            code: 400
-        });
-    }
-
     try {
-        const user = await User.findByPk(user_id);
-        if(user_name === user.user_name && email === user.email && req.file === undefined) {
-            return res.status(200).json({
-                message: 'Profile no change.',
-                code: 200,
-                data: user
-            });
-        }
-
-        const check_username = await User.findOne({ where: { user_name } });
-        if (check_username && check_username.user_name !== user.user_name) {
-            return res.status(409).json({
-                message: 'The username is already in use.',
-                code: 409,
-            });
-        }
-
-        const check_email = await User.findOne({ where: { email } });
-        if (check_email && check_email.email !== user.email) {
-            return res.status(409).json({
-                message: 'The email is already in use.',
-                code: 409,
-            });
-        }
-
-        User.update(db_option, {
-            where: { id: user_id },
-        }).then(() => {
-            User.findOne({
-                where: { id: user_id },
-            }).then((data) => {
-                return res.status(200).json({
-                    message: 'Profile Edit Success!',
-                    code: 200,
-                    data: data
+        let result = await user.newprofileEdit(user_id, email, user_name, req.file);
+        console.log('----');
+        console.log(result);
+        switch (result.result) {
+            case 'Profile type must be only image.':
+                return res.status(400).json({
+                    message: result.result,
+                    code: 400
                 });
-            })
-        })
+            case 'Profile no change.':
+                return res.status(200).json({
+                    message: result.result,
+                    code: 200,
+                    data: result.user
+                });
+            case 'The username is already in use.':
+                return res.status(409).json({
+                    message: result.result,
+                    code: 409,
+                });
+            case 'The email is already in use.':
+                return res.status(409).json({
+                    message: result.result,
+                    code: 409,
+                });
+            case 'Profile Edit Success!':
+                return res.status(200).json({
+                    message: result.result,
+                    code: 200,
+                    data: result.data
+                });
+            default:
+                console.log('ERR');
+                break;
+        }
     } catch (err) {
         return res.status(500).json({
             message: err.message,
