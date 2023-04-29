@@ -16,6 +16,8 @@ const {
 
 var { createSearchQuery } = require('../functions/query');
 
+const { success, fail } = require('../functions/responseStatus');
+
 const { Op } = require('sequelize');
 
 /**
@@ -69,7 +71,7 @@ const boardGet = async (req, res) => {
       });
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -84,14 +86,11 @@ const boardGetByPostId = async (req, res) => {
   try {
     let data = await searchByPostId(post_id);
     if (data == null) {
-        return res.status(500).json({
-            code: 500,
-            message: 'deletenon-existent id',
-        });
+      return fail(res, 500, 'non-existent id');
     }
     res.render('post/read', { post: data });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -107,7 +106,7 @@ const boardPost = (req, res) => {
       return res.status(200).json({ code: 200 });
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -121,7 +120,7 @@ const boardEditByPostId = (req, res) => {
       return res.status(200).json({ code: 200 });
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -135,7 +134,7 @@ const boardDeleteByPostId = (req, res) => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -150,7 +149,7 @@ const boardRecommand = async (req, res) => {
     const result = await recommandBoard(user_id, content_id);
     return res.status(result.code).json(result);
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -170,7 +169,7 @@ const postAuthCheck = (req, res) => {
       }
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
@@ -198,7 +197,7 @@ const boardRecommandCheck = (req, res) => {
       }
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, `${err.message}`);
   }
 };
 
