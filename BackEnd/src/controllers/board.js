@@ -163,9 +163,9 @@ const postAuthCheck = (req, res) => {
   try {
     authCheckPost(content_id).then((data) => {
       if (user_id === data.user_id) {
-        return res.status(200).json({ code: 200, message: 'authorized' });
+        return success(res, 200, 'authorized');
       } else {
-        return res.status(401).json({ code: 401, message: 'unauthorized' });
+        return success(res, 401, 'unauthorized');
       }
     });
   } catch (err) {
@@ -184,16 +184,10 @@ const boardRecommandCheck = (req, res) => {
     recommandCheckBoard(user_id, content_id).then((data) => {
       if (data !== null) {
         // 추천 O
-        return res.status(200).json({
-          code: 200,
-          message: 'created',
-        });
+        return success(res, 200, 'created');
       } else {
         // 추천 X
-        return res.status(200).json({
-          code: 200,
-          message: 'deleted',
-        });
+        return success(res, 200, 'deleted');
       }
     });
   } catch (err) {
