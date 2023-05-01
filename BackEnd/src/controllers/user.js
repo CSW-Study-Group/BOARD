@@ -1,10 +1,11 @@
 'use strict';
 
-const { User } = require('../utils/connect');
+const { User, Attendance } = require('../utils/connect');
 const { Op } = require('sequelize');
 
 const { accessToken, refreshToken } = require('../functions/signJWT');
 const bcrypt = require('bcrypt');
+const { success, fail } = require('../functions/responseStatus');
 
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
@@ -220,6 +221,29 @@ const profileView = (req, res) => {
     res.render('user/profile');
 };
 
+const attendCheck = async (req, res) => {
+    let user_id = req.decoded.id;
+    const today = new Date().toISOString().slice(0, 10);
+  
+    const attendance = await Attendance.findOne({
+      where: { User_id: user_id, attendanceDate: today }
+    });
+  
+    if (attendance) {
+        return fail(res, 400, '오늘은 이미 출석체크를 하셨습니다.');
+    }
+  
+    try {
+      await Attendance.create({ user_id: user_id, attendanceDate: today });
+      return success(res, 200, '출석이 완료되었습니다.');
+    } catch (err) {
+      console.error(err);
+      return fail(res, 500, `${err.message}`);
+    }
+  };
+
+
+
 module.exports = {
     loginPost,
     registerPost,
@@ -228,4 +252,5 @@ module.exports = {
     loginView,
     registerView,
     profileView,
+    attendCheck,
 };

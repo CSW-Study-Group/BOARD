@@ -39,4 +39,7 @@ router.get('/login', ctrl.loginView);
 router.get('/register', ctrl.registerView);
 router.get('/profile/output/', ctrl.profileView);
 
+// attendance
+router.post('/attend', auth, ctrl.attendCheck);
+
 module.exports = router;
