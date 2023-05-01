@@ -8,7 +8,7 @@ const router = express.Router();
 const ctrl = require('../controllers/board');
 
 // methods for board
-router.get('/', ctrl.boardGet)
+router.get('/', ctrl.boardGet);
 router.post('/', auth, ctrl.boardPost);
 
 router.get('/:id', ctrl.boardGetByPostId);

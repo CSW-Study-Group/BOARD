@@ -1,6 +1,6 @@
 'use strict';
 
-const { User, Post } = require('../utils/connect');
+const { User, Post, Comment } = require('../utils/connect');
 
 const model = require('../utils/connect');
 const user_post = model.sequelize.models.user_post;
@@ -94,7 +94,18 @@ const boardGetByPostId = (req, res) => {
                 where: { id: post_id },
             }).then(async (data) => {
                 await Post.increment({ view: 1 }, { where: { id: { [Op.eq]: post_id } } });
-                res.render('post/read', { post: data });
+                Comment.findAll({
+                    include: [
+                        {
+                            model: User,
+                            attributes: ['user_name', 'profile'],
+                            where: { id: data.user_id },
+                        },
+                    ],
+                    where: { post_id: post_id }, limit: 10 
+                }).then((comments) => {
+                    res.render('post/read', { post: data, comments: comments });
+                });
             });
         })
     } catch (err) {
