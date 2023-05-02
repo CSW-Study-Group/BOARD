@@ -85,6 +85,19 @@ body {
   margin-top: 5px;
 }
 
+.new-comment {
+  margin-top: 20px;
+}
+
+.new-comment span {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+.new-comment button {
+  margin-top: 10px;
+}
+
 /* profile  */
 .box {
   margin-top: 15px;

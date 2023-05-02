@@ -2,6 +2,8 @@
 
 const recommend_btn = document.getElementById('recommend_btn');
 const recommend_count = document.getElementById('recommend_count');
+const create_comment_btn = document.getElementById('create_comment_btn');
+const comment_body = document.querySelector("[name='comment_body']");
 
 const url_str = window.location.href;
 const words = url_str.split('/');
@@ -127,4 +129,54 @@ function recommand_click() {
                 alert('An error occurred while processing your request. Please try again later.');
             });
     }
+}
+
+function create_comment_post() {
+    if(!localStorage.getItem('access_token')) {
+        alert('Please login first.');
+        location.href = "/user/login";
+    }
+    if(!comment_body.value) return alert("Please input comment.");
+    let new_comment = comment_body.value;
+
+    fetch(`/board/${content_id}/comment`, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': localStorage.getItem('access_token')
+        },
+        body: JSON.stringify({ comment: new_comment })
+    })
+        .then((res) => res.json())
+        .then((res) => {
+            if (res.code === 200) {
+                alert("Create comment success.");
+                location.herf = `/board/${content_id}`
+                location.reload();
+            } else if (res.code === 419) {
+                fetch("/user/token/refresh", {
+                    headers: { 'authorization': localStorage.getItem('refresh_token') }
+                })
+                    .then((res) => res.json())
+                    .then((res) => {
+                        if(res.code === 419) {
+                            alert(res.message);
+                            localStorage.removeItem('access_token');
+                            localStorage.removeItem('refresh_token');
+                            window.location.href = "/user/login";
+                        } else {
+                            alert(res.message);
+                            localStorage.setItem('access_token', res.access_token);
+                            window.location.reload();
+                        }
+                    })
+            } else { // 401 or 500
+                alert(res.message);
+                location.href = "/user/login";
+            }
+        })
+        .catch((err) => {
+            alert('An error occurred while processing your request. Please try again later.');
+        });
+
 }

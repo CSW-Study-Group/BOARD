@@ -56,6 +56,11 @@
                     <div class="body"><%= comment.comment %></div>
                 </div>
             <% }%>
+            <div class="form-group new-comment">
+                <span>new comment</span>
+                <textarea class="form-control rounded" name="comment_body"></textarea>
+                <button class="btn btn-info" id="create_comment_btn" type="button" onclick="create_comment_post()">Post new comment</button>
+            </div>
         </div>
 
         <div class="mt-3">

@@ -221,6 +221,27 @@ const boardRecommand = (req, res) => {
 };
 
 /**
+ * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
+ */
+const boardCommentPost = (req, res) => {
+    const { comment } = req.body;
+    const user_id = req.decoded.id;
+    let content_id = req.params.id;
+
+    try {
+        Comment.create({
+            comment: comment,
+            user_id: user_id,
+            post_id: content_id
+        }).then(() => {
+            return res.status(200).json({ code: 200 });
+        });
+    } catch (err) {
+        return res.status(500).json({ code: 500, message: err.message });
+    }
+};
+
+/**
  * 게시글 작성자인지 확인한다. (작성자일 경우, 200, 작성자가 아닐 경우, 401)
  */
 const postAuthCheck = (req, res) => {
@@ -296,6 +317,7 @@ module.exports = {
     boardEditByPostId,
     boardDeleteByPostId,
     boardRecommand,
+    boardCommentPost,
     postAuthCheck,
     boardRecommandCheck,
     postView,

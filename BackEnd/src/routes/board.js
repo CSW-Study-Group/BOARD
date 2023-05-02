@@ -15,7 +15,9 @@ router.get('/:id', ctrl.boardGetByPostId);
 router.delete('/:id', ctrl.boardDeleteByPostId);
 router.patch('/:id', auth, ctrl.boardEditByPostId);
 
-router.post('/:id/recommand', auth, ctrl.boardRecommand)
+router.post('/:id/recommand', auth, ctrl.boardRecommand);
+
+router.post('/:id/comment', auth, ctrl.boardCommentPost);
 
 // check auth, recommand status
 router.get('/:id/auth', auth, ctrl.postAuthCheck);
