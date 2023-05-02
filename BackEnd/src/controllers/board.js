@@ -145,15 +145,18 @@ const boardPost = (req, res) => {
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
 const boardEditByPostId = (req, res) => {
+    const { title, content } = req.body;
+    const post_id = req.params.id
+
     try {
         Post.update(
             {
-                title: req.body.title,
-                content: req.body.content,
+                title: title,
+                content: content,
                 updated_at: new Date(),
             },
             {
-                where: { id: req.body.id },
+                where: { id: post_id },
             },
         ).then(() => {
             return res.status(200).json({ code: 200 });
