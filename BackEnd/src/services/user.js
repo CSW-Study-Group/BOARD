@@ -11,7 +11,7 @@ const bcrypt = require('bcrypt');
  * @param {string} email
  * @returns {object} { DB data }
  */
-const emailSearch = async (email) => {
+const findUserByEmail = async (email) => {
   return await User.findOne({ where: { email: email } });
 };
 
@@ -20,7 +20,7 @@ const emailSearch = async (email) => {
  * @param {number} id
  * @returns {object} { DB data }
  */
-const idSearch = async (id) => {
+const findUserById = async (id) => {
   return await User.findOne({ where: { id: id } });
 };
 
@@ -41,33 +41,28 @@ const createUser = async (email, password, user_name) => {
 };
 
 /**
- * email과 password를 받아 DB와 대조.
+ * email과 password를 받아 DB와 대조
  * @param {string} email
  * @param {string} password
  *
- * @returns {object} { message: string, access_token: string, refresh_token: string }
+ * @returns {object} { access_token: string, refresh_token: string }
  */
-const loginCheck = async (email, password) => {
-  let message = '';
-  return await emailSearch(email) // email 검색
+const verifyLogin = async (email, password) => {
+  return await findUserByEmail(email) // email 검색
     .then(async (user) => {
       if (user === null) {
         // email검색 실패(계정 없음)
-        message = 'Unauthorized email.';
-        return { message };
+        throw new Error('Unauthorized email.');
       }
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
         // 비밀번호 틀림
-        message = 'Incorrect password.';
-        return { message };
+        throw new Error('Incorrect password.');
       } else {
         // 비밀번호 맞음
         let access_token = await accessToken({ type: 'JWT', id: user.id });
         let refresh_token = await refreshToken({ type: 'JWT', id: user.id });
-        message = 'Authorize success.';
         return {
-          message,
           access_token,
           refresh_token,
         };
@@ -76,17 +71,17 @@ const loginCheck = async (email, password) => {
 };
 
 /**
- * 사용자에게, username, email, password를 입력받아 회원가입을 시도한다.
- * - username, email이 다른 사용자가 사용하고 있을 시, 409
- * - username, email, password 중 하나라도 입력되지 않았을 시, 405
+ * email, password, user_name 입력받아 DB와 대조
+ * email, user_name이 중복되는지 확인
+ * email, user_name, password가 비어있지 않은지 확인
  *
  * @param {string} user_name 사용자 이름
  * @param {string} email 이메일
  * @param {string} password 비밀번호
  *
- * @returns {string} message
+ * @returns {boolean}
  */
-const registerCheck = async (email, password, user_name) => {
+const verifyRegister = async (email, password, user_name) => {
   return await User.findOne({ where: { [Op.or]: [{ email: email }, { user_name: user_name }] } }).then((data) => {
     let exist_data = JSON.stringify(data); // 객체(Object) -> JSON
     exist_data = JSON.parse(exist_data); // JSON -> 객체(Object)
@@ -94,20 +89,20 @@ const registerCheck = async (email, password, user_name) => {
     if (exist_data !== null) {
       // 찾는 데이터가 있을때
       if (exist_data.user_name === user_name) {
-        return 'Exist username.';
+        throw new Error('Exist username.');
       } else {
-        return 'Exist email.';
+        throw new Error('Exist email.');
       }
     } else {
       // 찾는 이메일, 닉네임이 없을 경우 (중복 X)
-      if (user_name === '') {
-        return 'Please input username.';
-      } else if (email === '') {
-        return 'Please input id.';
-      } else if (password === '') {
-        return 'Please input password.';
+      if (!user_name) {
+        throw new Error('Please input username.');
+      } else if (!email) {
+        throw new Error('Please input id.');
+      } else if (!password) {
+        throw new Error('Please input password.');
       } else {
-        return 'register pass';
+        return true;
       }
     }
   });
@@ -122,7 +117,7 @@ const registerCheck = async (email, password, user_name) => {
  *
  * @returns {Object} { message: string, user | data : DBdata }
  */
-const editProfile = async (user_id, email, user_name, file) => {
+const updateUserInfo = async (user_id, email, user_name, file) => {
   const db_option = {
     user_name,
     email,
@@ -132,8 +127,7 @@ const editProfile = async (user_id, email, user_name, file) => {
   let message = '';
   if (file && !file.mimetype.startsWith('image/')) {
     // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
-    message = 'Profile type must be only image.';
-    return { message };
+    throw new Error('Profile type must be only image.');
   }
   const user = await User.findByPk(user_id);
   if (user_name === user.user_name && email === user.email && file === undefined) {
@@ -143,14 +137,12 @@ const editProfile = async (user_id, email, user_name, file) => {
 
   const check_username = await User.findOne({ where: { user_name } });
   if (check_username && check_username.user_name !== user.user_name) {
-    message = 'The username is already in use.';
-    return { message };
+    throw new Error('The username is already in use.');
   }
 
-  const check_email = await emailSearch(email);
+  const check_email = await findUserByEmail(email);
   if (check_email && check_email.email !== user.email) {
-    message = 'The email is already in use.';
-    return { message };
+    throw new Error('The email is already in use.');
   }
 
   return User.update(db_option, {
@@ -166,9 +158,10 @@ const editProfile = async (user_id, email, user_name, file) => {
 };
 
 module.exports = {
-  loginCheck,
-  registerCheck,
+  findUserByEmail,
+  findUserById,
   createUser,
-  idSearch,
-  editProfile,
+  verifyLogin,
+  verifyRegister,
+  updateUserInfo,
 };
