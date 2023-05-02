@@ -68,7 +68,7 @@ const boardGet = async (req, res) => {
         }
 
         const post_count = await Post.count();
-        while(page * limit > post_count + limit) page--; // 마지막 페이지로 설정
+        if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
 
         Post.findAndCountAll({
             include: [
