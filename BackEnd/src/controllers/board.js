@@ -146,7 +146,7 @@ const boardPost = (req, res) => {
  */
 const boardEditByPostId = (req, res) => {
     const { title, content } = req.body;
-    const post_id = req.params.id
+    const { id: post_id } = req.params;
 
     try {
         Post.update(
