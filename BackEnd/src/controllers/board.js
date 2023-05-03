@@ -83,15 +83,13 @@ const boardGetByPostId = async (req, res) => {
 
   try {
     let data = await searchByPostId(post_id);
-    if (data == null) {
-        return res.status(500).json({
-            code: 500,
-            message: 'deletenon-existent id',
-        });
-    }
     res.render('post/read', { post: data });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    if (err.message === 'No data.') {
+      return res.status(404).json({ code: 404, message: err.message });
+    } else {
+      return res.status(500).json({ code: 500, message: err.message });
+    }
   }
 };
 
@@ -115,9 +113,10 @@ const boardPost = (req, res) => {
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
 const boardEditByPostId = (req, res) => {
-  const { title, content, id } = req.body;
+  const { title, content } = req.body;
+  const { id: post_id } = req.params;
   try {
-    editPost(title, content, id).then(() => {
+    editPost(title, content, post_id).then(() => {
       return res.status(200).json({ code: 200 });
     });
   } catch (err) {
@@ -129,9 +128,9 @@ const boardEditByPostId = (req, res) => {
  * 해당하는 id의 게시글을 삭제한다.
  */
 const boardDeleteByPostId = (req, res) => {
-  const { id: id } = req.params;
+  const { id: post_id } = req.params;
   try {
-    deletePost(id).then(() => {
+    deletePost(post_id).then(() => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {

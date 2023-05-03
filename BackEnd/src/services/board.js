@@ -46,8 +46,9 @@ const postBoard = async (title, content, user_id) => {
  */
 const searchByPostId = async (post_id) => {
   const post = await Post.findOne({ where: { id: post_id } });
+  // post_id에 해당하는 게시글이 존재하는지 확인
   if (post == null) {
-    return null;
+    throw new Error('No data.');
   }
   const data = await Post.findOne({
     include: [
@@ -66,7 +67,7 @@ const searchByPostId = async (post_id) => {
 /**
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
-const editPost = async (title, content, id) => {
+const editPost = async (title, content, post_id) => {
   return await Post.update(
     {
       title: title,
@@ -74,27 +75,27 @@ const editPost = async (title, content, id) => {
       updated_at: new Date(),
     },
     {
-      where: { id: id },
+      where: { id: post_id },
     },
   );
 };
 
 /**
- * 해당하는 id의 게시글을 삭제한다.
+ * post_id에 해당하는 게시글을 삭제한다.
  */
-const deletePost = async (id) => {
-  return await Post.destroy({ where: { id: id } });
+const deletePost = async (post_id) => {
+  return await Post.destroy({ where: { id: post_id } });
 };
 
 /**
  * 게시글에 대한 추천을 한다. (추천 O -> 추천 X) (추천 X -> 추천 O)
  */
 const recommandBoard = async (user_id, content_id) => {
-  const userPost = await user_post.findOne({
+  const recommand_post = await user_post.findOne({
     where: { [Op.and]: [{ user_id: user_id }, { post_id: content_id }] },
   });
 
-  if (userPost !== null) {
+  if (recommand_post !== null) {
     // 추천 취소
     const post = await Post.findOne({
       attributes: ['recommand'],
@@ -118,7 +119,7 @@ const recommandBoard = async (user_id, content_id) => {
 };
 
 /**
- * 게시글 작성자인지 확인한다.
+ * content_id에 해당하는 글을 찾고 그 글의 user_id 값을 리턴한다.
  */
 const authCheckPost = async (content_id) => {
   return await Post.findOne({
@@ -128,7 +129,7 @@ const authCheckPost = async (content_id) => {
 };
 
 /**
- * 해당 유저의 게시글 추천 여부를 확인한다.
+ * user_id, content_id에 해당하는 글을 찾아서 리턴한다.
  */
 const recommandCheckBoard = async (user_id, content_id) => {
   return await user_post.findOne({
@@ -137,10 +138,10 @@ const recommandCheckBoard = async (user_id, content_id) => {
 };
 
 /**
- * 게시글 수정 페이지를 렌더링하면서, 해당 게시글의 정보를 함께 전달한다.
+ * post_id에 해당하는 글을 찾아서 리턴한다.
  */
-const editView = async (id) => {
-  return await Post.findOne({ where: { id: id } });
+const editView = async (post_id) => {
+  return await Post.findOne({ where: { id: post_id } });
 };
 
 module.exports = {
