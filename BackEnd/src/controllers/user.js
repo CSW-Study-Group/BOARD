@@ -90,6 +90,8 @@ const postRegister = async (req, res) => {
 
 /**
  * 사용자의 id를 통해 프로필을 조회한다.
+ * @param {number} id
+ * @returns {object} { code: number, data: data }
  */
 const getProfile = async (req, res) => {
   user.findUserById(req.decoded.id).then((data) => {
