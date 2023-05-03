@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.3](https://github.com/CSW-Study-Group/BOARD/compare/v1.3.1...v1.3.3) (2023-05-03)
+
+
+### Features
+
+* 특정 ip 차단 코드 ([255543b](https://github.com/CSW-Study-Group/BOARD/commit/255543b3621471105aaadaf0a46033fe2c5df91e))
+* bootstrap 4.6 업데이트 ([a660481](https://github.com/CSW-Study-Group/BOARD/commit/a660481904d220bc654a32c9268895a14d0346fd))
+* ip logging ([ad91d97](https://github.com/CSW-Study-Group/BOARD/commit/ad91d97859c437a17a40d6a3c8ab6c3d6535e6b1))
+* sentry 에러 트래킹 & 모니터링 ([f773b9d](https://github.com/CSW-Study-Group/BOARD/commit/f773b9d36061ce8c8752d12bf63399e5da1fdae2))
+
+
+### Bug Fixes
+
+* 게시글 수정 논리오류 ([9f2a54e](https://github.com/CSW-Study-Group/BOARD/commit/9f2a54e1b7ff80b4e6d2809c842c603c01cb2846))
+
 ### [1.3.1](https://github.com/SoN-B/Node.JS-Practice/compare/v1.2.1...v1.3.1) (2023-04-10)
 
 
