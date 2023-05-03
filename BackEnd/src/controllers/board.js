@@ -14,15 +14,37 @@ const { Op } = require('sequelize');
  * 검색어가 있을 경우, 검색어에 해당하는 게시글을 조회한다. (없을 경우, 모든 게시글을 조회)
  * 검색어: 제목, 내용, 작성자로 검색할 수 있다.
  *
+ * limit 값이 5, 10, 20이 아닐 경우, 5로 설정하고, 에러 메시지를 반환한다.
+ * page 값이 1000 이상일 경우, 1로 설정하고, 에러 메시지를 반환한다.
+ *
+ * DB에서 조회한 글의 수보다 page * limit 값이 클 경우, page 값을 마지막 페이지로 설정한다.
+ *
  * @returns {Object} 게시글 정보
  */
 const boardGet = async (req, res) => {
     let { page, limit } = req.query;
-    let where_content = null,
-        where_user = null;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    let where_content = null, where_user = null;
+
+    const rendering = (res, posts, message, currentPage = 1, maxPage = 1, limit = 5) => {
+        return res.render('post/index', {
+            posts: posts,
+            currentPage: currentPage,
+            maxPage: maxPage,
+            limit: limit,
+            searchType: req.query.searchType,
+            searchText: req.query.searchText,
+            error: message,
+        });
+    };
 
     page = !isNaN(page) ? page : 1;
+    if(page > 1000) { return rendering(res, [], 'Page can only be a number less than 1000.'); }
+
     limit = !isNaN(limit) ? limit : 10;
+    if([5, 10, 20].indexOf(limit) === -1) { return rendering(res, [], 'Limit can only be 5, 10, 20.'); }
 
     try {
         let searchQuery = await createSearchQuery(req.query);
@@ -45,6 +67,9 @@ const boardGet = async (req, res) => {
             }
         }
 
+        const post_count = await Post.count();
+        if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
+
         Post.findAndCountAll({
             include: [
                 {
@@ -56,17 +81,10 @@ const boardGet = async (req, res) => {
             ],
             where: where_content,
             order: [['created_at', 'DESC']],
-            limit: Math.max(1, parseInt(limit)),
-            offset: (Math.max(1, parseInt(page)) - 1) * Math.max(1, parseInt(limit)),
+            limit: Math.max(1, limit),
+            offset: (Math.max(1, page) - 1) * Math.max(1, limit),
         }).then((data) => {
-            res.render('post/index', {
-                posts: data.rows,
-                currentPage: page,
-                maxPage: Math.ceil(data.count / Math.max(1, parseInt(limit))),
-                limit: limit,
-                searchType: req.query.searchType,
-                searchText: req.query.searchText,
-            });
+            return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
         })
     } catch (err) {
         return res.status(500).json({ code: 500, message: err.message });
@@ -127,15 +145,18 @@ const boardPost = (req, res) => {
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
 const boardEditByPostId = (req, res) => {
+    const { title, content } = req.body;
+    const { id: post_id } = req.params;
+
     try {
         Post.update(
             {
-                title: req.body.title,
-                content: req.body.content,
+                title: title,
+                content: content,
                 updated_at: new Date(),
             },
             {
-                where: { id: req.body.id },
+                where: { id: post_id },
             },
         ).then(() => {
             return res.status(200).json({ code: 200 });
