@@ -12,20 +12,25 @@ const { check } = require('express-validator');
 const ctrl = require('../controllers/user');
 
 // methods for user
-router.post('/login', [
-    check('email').isEmail(),
-    check('password').notEmpty(),
+router.post('/login', [check('email').isEmail(), check('password').notEmpty(), validator], ctrl.postLogin);
+router.post(
+  '/register',
+  [
+    check('user_name').isLength({ min: 3, max: 30 }),
+    check('email').isEmail().isLength({ max: 30 }),
+    check('password').isLength({ min: 3, max: 100 }),
     validator,
-], ctrl.postLogin);
-router.post('/register', [
-    check('user_name').notEmpty(),
-    check('email').isEmail(),
-    check('password').isLength({ min: 2 }),
-    validator,
-], ctrl.postRegister);
+  ],
+  ctrl.postRegister,
+);
 
-router.get('/profile', auth, ctrl.getProfile);
-router.patch('/profile', auth, ctrl.editImage, ctrl.editProfile);
+router.get('/profile', [auth, check('id').notEmpty().isInt()], ctrl.getProfile);
+router.patch(
+  '/profile',
+  [auth, check('user_name').isLength({ min: 3, max: 30 }), check('email').isEmail().isLength({ max: 30 })],
+  ctrl.editImage,
+  ctrl.editProfile,
+);
 
 // token refresh
 router.get('/token/refresh', issuanceToken);
