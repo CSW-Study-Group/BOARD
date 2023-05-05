@@ -11,11 +11,17 @@ attend_btn.addEventListener("click", attendCheck);
 function updateProfile() {
     const is_disabled = fieldset.getAttribute('disabled') !== null;
 
+    const emailRegex = /^[a-zA-Z0-9+-\_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/; // 계정@도메인.최상위도메인
+
     const user_name = document.getElementsByName("username")[0].value;
     const email = document.getElementsByName("email")[0].value;
 
     if(!user_name) return alert("Please input username.");
+    else if(user_name.length < 3) return alert("Username must be longer than 2 characters.");
+
     if(!email) return alert("Please input email.");
+    else if(email.length < 3) return alert("Email must be longer than 3 characters.");
+    else if(!emailRegex.test(email)) return alert("Email must be in the correct format.");
 
     if(is_disabled === true) {
         form_show.style.display = "block";

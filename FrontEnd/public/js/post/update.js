@@ -15,7 +15,6 @@ function updatePost() {
     if(!body.value) return alert("Please input body.");
 
     const req = {
-        id : content_id[4],
         title : title.value,
         content : body.value
     }
