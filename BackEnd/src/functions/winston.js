@@ -23,6 +23,8 @@ class CustomTransport extends Transport {
         const response_time = parseFloat(info.message.split(' ')[4]);
         const ip = info.message.split(' ')[6];
 
+        console.log(level,method,message,status,response_time, ip);
+
         if (message && !/^\/(js|css)/.test(message)) { // '/js' 또는 '/css'가 앞에 없는 경우
             Log.create({
                 level: level,

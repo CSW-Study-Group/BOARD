@@ -5,6 +5,7 @@ const logger = require('../functions/winston');
 exports.success = (res, code, message = 'No message.', data = 'No data.') => {
     logger.info(message);
     return res.status(code).json({
+        code: code,
         message: message,
         data: data,
     });
