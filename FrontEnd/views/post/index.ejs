@@ -22,9 +22,13 @@
                 </tr>
             </thead>
             <tbody>
-                <% if(posts==null || posts.length==0){ %>
+                <% if(posts==null || posts.length==0) { %>
                     <tr>
-                        <td colspan = 4> There is no data to show :( </td>
+                        <% if(error) { %>
+                            <td colspan = 4> ⚠ <%= error %> </td>
+                        <% } else { %>
+                            <td colspan = 4> ⚠ There is no data to show. </td>
+                        <% } %>
                     </tr>
                 <% } %>
                 <% posts.forEach(function(post) { %>

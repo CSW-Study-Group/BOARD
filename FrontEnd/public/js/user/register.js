@@ -8,9 +8,9 @@ register.addEventListener("click", Register);
 function Register() {
     const emailRegex = /^[a-zA-Z0-9+-\_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/; // 계정@도메인.최상위도메인
 
-    if(user_name.value.length < 3) return alert("username must be longer than 2 characters.");
-    if(!emailRegex.test(email.value)) return alert("email must be in the correct format.");
-    if(password.value.length < 3) return alert("password must be longer than 2 characters.");
+    if(user_name.value.length < 3) return alert("Username must be longer than 2 characters.");
+    if(!emailRegex.test(email.value)) return alert("Email must be in the correct format.");
+    if(password.value.length < 3) return alert("Password must be longer than 2 characters.");
 
     const req = {
         user_name: user_name.value,
