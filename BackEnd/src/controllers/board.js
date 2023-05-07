@@ -7,6 +7,7 @@ const {
   getBoard,
   postBoard,
   searchByPostId,
+  getComments,
   editPost,
   deletePost,
   countPost,
@@ -107,7 +108,9 @@ const boardGetByPostId = async (req, res) => {
 
   try {
     let data = await searchByPostId(post_id);
-    res.render('post/read', { post: data });
+
+    let comments = await getComments(post_id);
+    res.render('post/read', { post: data, comments: comments });
   } catch (err) {
     if (err.message === 'No data.') {
       return res.status(404).json({ code: 404, message: err.message });
@@ -181,42 +184,21 @@ const boardRecommand = async (req, res) => {
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
  */
 const boardCommentPost = (req, res) => {
-    const { comment } = req.body;
-    const user_id = req.decoded.id;
-    let content_id = req.params.id;
+  const { comment } = req.body;
+  const user_id = req.decoded.id;
+  let content_id = req.params.id;
 
-    try {
-        Comment.create({
-            comment: comment,
-            user_id: user_id,
-            post_id: content_id
-        }).then(() => {
-            return res.status(200).json({ code: 200 });
-        });
-    } catch (err) {
-        return res.status(500).json({ code: 500, message: err.message });
-    }
-};
-
-/**
- * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
- */
-const boardCommentPost = (req, res) => {
-    const { comment } = req.body;
-    const user_id = req.decoded.id;
-    let content_id = req.params.id;
-
-    try {
-        Comment.create({
-            comment: comment,
-            user_id: user_id,
-            post_id: content_id
-        }).then(() => {
-            return res.status(200).json({ code: 200 });
-        });
-    } catch (err) {
-        return res.status(500).json({ code: 500, message: err.message });
-    }
+  try {
+    Comment.create({
+      comment: comment,
+      user_id: user_id,
+      post_id: content_id
+    }).then(() => {
+      return res.status(200).json({ code: 200 });
+    });
+  } catch (err) {
+    return res.status(500).json({ code: 500, message: err.message });
+  }
 };
 
 /**

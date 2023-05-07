@@ -19,6 +19,11 @@ module.exports = class Comment extends Sequelize.Model {
                     type: Sequelize.TEXT,
                     allowNull: false,
                 },
+                deleted_YN: {
+                    type: Sequelize.ENUM('Y', 'N'),
+                    allowNull: false,
+                    defaultValue: 'N',
+                }
             },
             {
                 sequelize,

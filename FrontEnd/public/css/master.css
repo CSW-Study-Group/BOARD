@@ -65,7 +65,7 @@ body {
 
 .comments .title{
   font-weight: 600;
-  font-size: 1.1em;
+  font-size: 1.3em;
 }
 
 .comment {
@@ -86,7 +86,7 @@ body {
 }
 
 .new-comment {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .new-comment span {

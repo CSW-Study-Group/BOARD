@@ -1,6 +1,6 @@
 'use strict';
 
-const { User, Post } = require('../utils/connect');
+const { User, Post, Comment } = require('../utils/connect');
 
 const model = require('../utils/connect');
 const user_post = model.sequelize.models.user_post;
@@ -62,6 +62,19 @@ const searchByPostId = async (post_id) => {
   });
   await Post.increment({ view: 1 }, { where: { id: post_id } });
   return data;
+};
+
+const getComments = async (post_id) => {
+  return await Comment.findAll({
+    include: [
+      {
+        model: User,
+        attributes: ['user_name', 'profile'],
+      },
+    ],
+    where: { post_id: post_id, deleted_YN: 'N' },
+    limit: 10,
+  });
 };
 
 /**
@@ -155,6 +168,7 @@ module.exports = {
   getBoard,
   postBoard,
   searchByPostId,
+  getComments,
   editPost,
   deletePost,
   countPost,
