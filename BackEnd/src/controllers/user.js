@@ -1,8 +1,5 @@
 'use strict';
 
-const multer = require('multer');
-const upload = require('../middleware/multer');
-
 const user = require('../services/user');
 
 /**
@@ -33,7 +30,6 @@ const postLogin = async (req, res) => {
       case 'Incorrect password.':
         code = 405;
         break;
-
       default:
         code = 500;
         break;
@@ -64,7 +60,7 @@ const postRegister = async (req, res) => {
           code: 200,
         });
       } else {
-        throw new Error('services error!'); // 에러 메시지 확인 필요
+        throw new Error('Services error.');
       }
     });
   } catch (err) {
@@ -79,7 +75,6 @@ const postRegister = async (req, res) => {
       case 'Please input password.':
         code = 405;
         break;
-
       default:
         code = 500;
         break;
@@ -90,35 +85,28 @@ const postRegister = async (req, res) => {
 
 /**
  * 사용자의 id를 통해 프로필을 조회한다.
+ * @param {number} id
+ * @returns {object} { code: number, data: data }
  */
 const getProfile = async (req, res) => {
-  user.findUserById(req.decoded.id).then((data) => {
-    return res.status(200).json({ code: 200, data: data });
-  });
-};
-
-/**
- * 이미지 받아와서 서버에 저장
- * 파일의 크기가 10Mb 넘어가면 400 반환
- */
-const editImage = async (req, res, next) => {
   try {
-    upload.single('image')(req, res, (err) => {
-      // 프로필 사진 업로드
-      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-        // 파일 크기가 제한을 초과한 경우
-        return res.status(400).json({
-          code: 400,
-          message: 'File size exceeded. please check the file size and try again (not exceeding 10MB)',
-        });
-      } else if (err) {
-        // 그 외의 에러인 경우
-        return res.status(500).json({ code: 500, message: 'Server error.' });
+    user.findUserById(req.decoded.id).then((data) => {
+      if (!data) {
+        throw new Error('Can not find profile.');
       }
-      return next();
+      return res.status(200).json({ code: 200, data: data });
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 400;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return res.status(code).json({ code: code, message: err.message });
   }
 };
 
@@ -153,7 +141,6 @@ const editProfile = async (req, res) => {
       case 'The email is already in use.':
         code = 409;
         break;
-
       default:
         code = 500;
         break;
@@ -187,7 +174,6 @@ module.exports = {
   postLogin,
   postRegister,
   getProfile,
-  editImage,
   editProfile,
   viewLogin,
   viewRegister,

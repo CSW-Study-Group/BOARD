@@ -9,6 +9,7 @@ const router = express.Router();
 const { validator } = require('../middleware/validator');
 const { check } = require('express-validator');
 
+const { editImage } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
@@ -28,7 +29,7 @@ router.get('/profile', [auth, check('id').notEmpty().isInt()], ctrl.getProfile);
 router.patch(
   '/profile',
   [auth, check('user_name').isLength({ min: 3, max: 30 }), check('email').isEmail().isLength({ max: 30 })],
-  ctrl.editImage,
+  editImage,
   ctrl.editProfile,
 );
 
