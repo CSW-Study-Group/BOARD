@@ -30,7 +30,6 @@ const postLogin = async (req, res) => {
       case 'Incorrect password.':
         code = 405;
         break;
-
       default:
         code = 500;
         break;
@@ -61,7 +60,7 @@ const postRegister = async (req, res) => {
           code: 200,
         });
       } else {
-        throw new Error('Services error.'); // 에러 메시지 확인 필요
+        throw new Error('Services error.');
       }
     });
   } catch (err) {
@@ -76,7 +75,6 @@ const postRegister = async (req, res) => {
       case 'Please input password.':
         code = 405;
         break;
-
       default:
         code = 500;
         break;
@@ -143,7 +141,6 @@ const editProfile = async (req, res) => {
       case 'The email is already in use.':
         code = 409;
         break;
-
       default:
         code = 500;
         break;
