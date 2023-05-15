@@ -13,9 +13,16 @@ const { editImage } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
-router.post('/login', [check('email').isEmail(), check('password').notEmpty(), validator], ctrl.postLogin);
-router.post(
-  '/register',
+router.post('/login',
+  [
+    check('email').isEmail(),
+    check('password').notEmpty(),
+    validator
+  ],
+  ctrl.postLogin
+);
+
+router.post('/register',
   [
     check('user_name').isLength({ min: 3, max: 30 }),
     check('email').isEmail().isLength({ max: 30 }),
@@ -25,10 +32,15 @@ router.post(
   ctrl.postRegister,
 );
 
-router.get('/profile', [auth, check('id').notEmpty().isInt()], ctrl.getProfile);
-router.patch(
-  '/profile',
-  [auth, check('user_name').isLength({ min: 3, max: 30 }), check('email').isEmail().isLength({ max: 30 })],
+router.get('/profile', auth, ctrl.getProfile);
+router.patch('/profile',
+  [
+    auth,
+    // !Error : Multipart
+    check('user_name').isLength({ min: 3, max: 30 }),
+    check('email').isEmail().isLength({ max: 30 }),
+    validator
+  ],
   editImage,
   ctrl.editProfile,
 );
