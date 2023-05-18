@@ -192,9 +192,46 @@ const boardCommentPost = (req, res) => {
     Comment.create({
       comment: comment,
       user_id: user_id,
-      post_id: content_id
+      post_id: content_id,
     }).then(() => {
       return res.status(200).json({ code: 200 });
+    });
+  } catch (err) {
+    return res.status(500).json({ code: 500, message: err.message });
+  }
+};
+
+/**
+ * 해당하는 id의 댓글을 삭제한다.
+ * 테이블의 deleted_YN을 Y로 변경한다.
+ */
+const boardCommentDelete = (req, res) => {
+  //테이블의 deleted_YN을 Y로 변경한다.
+  const comment_id = req.params.comment_id;
+  const user_id = req.decoded.id;
+  // comment의 user_id와 로그인한 user_id가 같으면 삭제한다.
+  try {
+    Comment.findOne({
+      where: {
+        id: comment_id,
+      },
+    }).then((data) => {
+      if (data.user_id === user_id) {
+        Comment.update(
+          {
+            deleted_YN: 'Y',
+          },
+          {
+            where: {
+              id: comment_id,
+            },
+          }
+        ).then(() => {
+          return res.status(200).json({ code: 200 });
+        });
+      } else {
+        return res.status(401).json({ code: 401, message: 'unauthorized' });
+      }
     });
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
@@ -273,6 +310,7 @@ module.exports = {
   boardDeleteByPostId,
   boardRecommand,
   boardCommentPost,
+  boardCommentDelete,
   postAuthCheck,
   boardRecommandCheck,
   postView,

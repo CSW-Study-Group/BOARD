@@ -48,6 +48,7 @@ router.post(
 );
 
 router.post('/:id/comment', auth, ctrl.boardCommentPost);
+router.delete('/:id/comment/:comment_id', auth, ctrl.boardCommentDelete);
 
 // check auth, recommand status
 router.get(

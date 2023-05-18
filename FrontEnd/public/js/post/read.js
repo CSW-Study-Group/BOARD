@@ -180,3 +180,48 @@ function create_comment_post() {
         });
 
 }
+
+function delete_comment_post(comment_id) {
+    fetch(`/board/${content_id}/comment/${comment_id}`, {
+        method: "DELETE",
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': localStorage.getItem('access_token')
+        }
+    })
+        .then((res) => res.json())
+        .then((res) => {
+            if (res.code === 200) {
+                alert("Delete comment success.");
+                location.herf = `/board/${content_id}`
+                location.reload();
+            } else if (res.code === 419) {
+                fetch("/user/token/refresh", {
+                    headers: { 'authorization': localStorage.getItem('refresh_token') }
+                })
+                    .then((res) => res.json())
+                    .then((res) => {
+                        if(res.code === 419) {
+                            alert(res.message);
+                            localStorage.removeItem('access_token');
+                            localStorage.removeItem('refresh_token');
+                            window.location.href = "/user/login";
+                        } else {
+                            alert(res.message);
+                            localStorage.setItem('access_token', res.access_token);
+                            window.location.reload();
+                        }
+                    })
+            } else { // 401 or 500
+                if(res.message === "unauthorized") {
+                    alert("댓글 작성자만 삭제할 수 있습니다.");
+                } else {
+                    alert(res.message);
+                    location.href = "/user/login";
+                }
+            }
+        })
+        .catch((err) => {
+            alert('An error occurred while processing your request. Please try again later.');
+        });
+}

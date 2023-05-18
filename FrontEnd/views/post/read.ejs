@@ -47,6 +47,7 @@
                     <div>
                         <img src="<%= comment.User.profile %>" class="rounded-circle" alt="..." width=25 height=25>
                         <span class="name"><%= comment.User.user_name %></span>
+                        <button class="btn btn-secondary delete" type="button" onclick="delete_comment_post(<%= comment.id %>)">✖</button>
                         <span class="date">
                             <% let create_at = new Date(comment.created_at) %>
                             <% create_at.setHours(create_at.getHours() + 9); %>
