@@ -95,7 +95,7 @@ const boardGet = async (req, res) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip, err.message);
   }
 };
 
@@ -113,9 +113,9 @@ const boardGetByPostId = async (req, res) => {
     res.render('post/read', { post: data });
   } catch (err) {
     if (err.message === 'No data.') {
-      return fail(res, 404, 'GET', req.ip, `${err.message}`);
+      return fail(res, 404, 'GET', req.ip, err.message);
     } else {
-      return fail(res, 500, 'GET', req.ip, `${err.message}`);
+      return fail(res, 500, 'GET', req.ip, err.message);
     }
   }
 };
@@ -132,7 +132,7 @@ const boardPost = (req, res) => {
       return success(res, 200, 'POST', req.ip, '게시글이 작성되었습니다.');
     });
   } catch (err) {
-    return fail(res, 500, 'POST', req.ip, `${err.message}`);
+    return fail(res, 500, 'POST', req.ip, err.message);
   }
 };
 
@@ -147,7 +147,7 @@ const boardEditByPostId = (req, res) => {
       return success(res, 200, 'PATCH', req.ip, '게시글이 수정되었습니다.');
     });
   } catch (err) {
-    return fail(res, 500, 'PATCH', req.ip, `${err.message}`);
+    return fail(res, 500, 'PATCH', req.ip, err.message);
   }
 };
 
@@ -161,7 +161,7 @@ const boardDeleteByPostId = (req, res) => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {
-    return fail(res, 500, 'DELETE', req.ip, `${err.message}`);
+    return fail(res, 500, 'DELETE', req.ip, err.message);
   }
 };
 
@@ -176,7 +176,7 @@ const boardRecommand = async (req, res) => {
     const result = await recommandBoard(user_id, content_id);
     return success(res, 200, 'POST', req.ip, result.message);
   } catch (err) {
-    return fail(res, 500, 'POST', req.ip, `${err.message}`);
+    return fail(res, 500, 'POST', req.ip, err.message);
   }
 };
 
@@ -196,7 +196,7 @@ const postAuthCheck = (req, res) => {
       }
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip, err.message);
   }
 };
 
@@ -218,7 +218,7 @@ const boardRecommandCheck = (req, res) => {
       }
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip, err.message);
   }
 };
 
