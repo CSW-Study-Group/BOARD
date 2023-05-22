@@ -174,7 +174,7 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return success(res, 200, 'POST', req.ip, result.message);
+    return success(res, 200, 'POST', req.ip, result.message, result.data)
   } catch (err) {
     return fail(res, 500, 'POST', req.ip, `${err.message}`);
   }
