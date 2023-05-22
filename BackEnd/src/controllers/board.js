@@ -38,7 +38,8 @@ const boardGet = async (req, res) => {
   page = parseInt(page);
   limit = parseInt(limit);
 
-  let where_content = null, where_user = null;
+  let where_content = null,
+    where_user = null;
 
   const rendering = (res, posts, message, currentPage = 1, maxPage = 1, limit = 5) => {
     return res.render('post/index', {
@@ -128,7 +129,7 @@ const boardPost = (req, res) => {
 
   try {
     postBoard(title, content, user_id).then(() => {
-      return success(res, 200, 'POST', req.ip, '게시글이 작성되었습니다.')
+      return success(res, 200, 'POST', req.ip, '게시글이 작성되었습니다.');
     });
   } catch (err) {
     return fail(res, 500, 'POST', req.ip, `${err.message}`);
@@ -143,7 +144,7 @@ const boardEditByPostId = (req, res) => {
   const { id: post_id } = req.params;
   try {
     editPost(title, content, post_id).then(() => {
-      return success(res, 200, 'PATCH', req.ip, '게시글이 수정되었습니다.')
+      return success(res, 200, 'PATCH', req.ip, '게시글이 수정되었습니다.');
     });
   } catch (err) {
     return fail(res, 500, 'PATCH', req.ip, `${err.message}`);
@@ -173,7 +174,7 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return success(res, 200, 'POST', req.ip, result.message)
+    return success(res, 200, 'POST', req.ip, result.message);
   } catch (err) {
     return fail(res, 500, 'POST', req.ip, `${err.message}`);
   }
@@ -189,13 +190,13 @@ const postAuthCheck = (req, res) => {
   try {
     authCheckPost(content_id).then((data) => {
       if (user_id === data.user_id) {
-        return success(res, 200, 'GET', req.ip, 'authorized')
+        return success(res, 200, 'GET', req.ip, 'authorized');
       } else {
         return success(res, 401, 'GET', req.ip, 'unauthorized');
       }
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip,`${err.message}`);
+    return fail(res, 500, 'GET', req.ip, `${err.message}`);
   }
 };
 
