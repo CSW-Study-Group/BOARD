@@ -225,20 +225,19 @@ const attendCheck = async (req, res) => {
     let user_id = req.decoded.id;
     const today = new Date().toISOString().slice(0, 10);
   
-    const attendance = await Attendance.findOne({
-      where: { User_id: user_id, attendanceDate: today }
-    });
-  
-    if (attendance) {
-        return fail(res, 400, '오늘은 이미 출석체크를 하셨습니다.');
-    }
-  
     try {
+        const attendance = await Attendance.findOne({
+            where: { User_id: user_id, attendanceDate: today }
+        });
+        
+        if (attendance) {
+              return fail(res, 400, 'POST', req.ip, '오늘은 이미 출석체크를 하셨습니다.');
+        }
+        
       await Attendance.create({ user_id: user_id, attendanceDate: today });
-      return success(res, 200, '출석이 완료되었습니다.');
+      return success(res, 200, 'POST', req.ip, '출석이 완료되었습니다.');
     } catch (err) {
-      console.error(err);
-      return fail(res, 500, `${err.message}`);
+      return fail(res, 500, 'POST', req.ip, `${err.message}`);
     }
   };
 

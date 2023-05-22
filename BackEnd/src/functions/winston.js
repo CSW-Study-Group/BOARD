@@ -23,9 +23,22 @@ class CustomTransport extends Transport {
         const response_time = parseFloat(info.message.split(' ')[4]);
         const ip = info.message.split(' ')[6];
 
-        console.log(level,method,message,status,response_time, ip);
-
-        if (message && !/^\/(js|css)/.test(message)) { // '/js' 또는 '/css'가 앞에 없는 경우
+        if(info.message.includes("'")) { //fail, success 함수로 생성된 로그인 경우
+            if (message && !/^\/(js|css)/.test(message)) { // '/js' 또는 '/css'가 앞에 없는 경우
+                Log.create({
+                    level: level,
+                    method: method,
+                    message: info.message.replace(/'/g, '').split(':')[1].substr(1),
+                    status: info.message.split(' ')[1],
+                    response_time: 0,
+                    ip: info.message.split(' ')[2],
+                }).then(() => {
+                    callback();
+                });
+            } else {
+                callback();
+            }
+        } else if (message && !/^\/(js|css)/.test(message)) { // winston 모듈로 생성된 로그인 경우
             Log.create({
                 level: level,
                 method: method,
@@ -104,7 +117,18 @@ if (config.get('server.status') !== 'production') {
 }
 
 logger.stream = {
-    write: (message) => logger.info(message),
+    write: (message) => {
+        const status = parseInt(message.split(' ')[3])
+        if( status >= 500 ){
+            logger.error(message)
+        }
+        else if(status >= 400){
+            logger.warn(message)
+        }
+        else {
+            logger.info(message)
+        }
+    }
 };
 
 module.exports = logger;

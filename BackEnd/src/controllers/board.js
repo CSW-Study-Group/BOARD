@@ -94,7 +94,7 @@ const boardGet = async (req, res) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip, `${err.message}`);
   }
 };
 
@@ -112,9 +112,9 @@ const boardGetByPostId = async (req, res) => {
     res.render('post/read', { post: data });
   } catch (err) {
     if (err.message === 'No data.') {
-      return res.status(404).json({ code: 404, message: err.message });
+      return fail(res, 404, 'GET', req.ip, `${err.message}`);
     } else {
-      return res.status(500).json({ code: 500, message: err.message });
+      return fail(res, 500, 'GET', req.ip, `${err.message}`);
     }
   }
 };
@@ -128,10 +128,10 @@ const boardPost = (req, res) => {
 
   try {
     postBoard(title, content, user_id).then(() => {
-      return res.status(200).json({ code: 200 });
+      return success(res, 200, 'POST', req.ip, '게시글이 작성되었습니다.')
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'POST', req.ip, `${err.message}`);
   }
 };
 
@@ -143,10 +143,10 @@ const boardEditByPostId = (req, res) => {
   const { id: post_id } = req.params;
   try {
     editPost(title, content, post_id).then(() => {
-      return res.status(200).json({ code: 200 });
+      return success(res, 200, 'PATCH', req.ip, '게시글이 수정되었습니다.')
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'PATCH', req.ip, `${err.message}`);
   }
 };
 
@@ -160,7 +160,7 @@ const boardDeleteByPostId = (req, res) => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'DELETE', req.ip, `${err.message}`);
   }
 };
 
@@ -173,9 +173,9 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return res.status(result.code).json(result);
+    return success(res, 200, 'POST', req.ip, result.message)
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'POST', req.ip, `${err.message}`);
   }
 };
 
@@ -189,13 +189,13 @@ const postAuthCheck = (req, res) => {
   try {
     authCheckPost(content_id).then((data) => {
       if (user_id === data.user_id) {
-        return success(res, 200, 'authorized')
+        return success(res, 200, 'GET', req.ip, 'authorized')
       } else {
-        return success(res, 401, 'unauthorized');
+        return success(res, 401, 'GET', req.ip, 'unauthorized');
       }
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip,`${err.message}`);
   }
 };
 
@@ -210,14 +210,14 @@ const boardRecommandCheck = (req, res) => {
     recommandCheckBoard(user_id, content_id).then((data) => {
       if (data !== null) {
         // 추천 O
-        return success(res, 200, 'created');
+        return success(res, 200, 'GET', req.ip, 'created');
       } else {
         // 추천 X
-        return success(res, 200, 'deleted');
+        return success(res, 200, 'GET', req.ip, 'deleted');
       }
     });
   } catch (err) {
-    return fail(res, 500, `${err.message}`);
+    return fail(res, 500, 'GET', req.ip, `${err.message}`);
   }
 };
 
