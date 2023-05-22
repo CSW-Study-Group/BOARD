@@ -4,8 +4,6 @@ const logger = require('../functions/winston');
 
 exports.success = (res, code, method, ip, message = 'No message.', data = 'No data.') => {
   logger.info(`${method} ${code} ${ip.replace(/:/g, '')} : '${message}'`);
-  console.log(data);
-  console.log(data.access_token);
   return res.status(code).json({
     code: code,
     message: message,
