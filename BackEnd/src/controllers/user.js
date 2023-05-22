@@ -76,7 +76,6 @@ const postRegister = async (req, res) => {
         break;
     }
     return fail(res, code, 'POST', req.ip, err.message);
-    //return res.status(code).json({ code: code, message: err.message });
   }
 };
 
@@ -92,7 +91,6 @@ const getProfile = async (req, res) => {
         throw new Error('Can not find profile.');
       }
       return success(res, 200, 'GET', req.ip, 'No message', data);
-      //return res.status(200).json({ code: 200, data: data });
     });
   } catch (err) {
     let code;
@@ -105,7 +103,6 @@ const getProfile = async (req, res) => {
         break;
     }
     return fail(res, code, 'GET', req.ip, err.message);
-    //return res.status(code).json({ code: code, message: err.message });
   }
 };
 
@@ -130,7 +127,6 @@ const editProfile = async (req, res) => {
       data = result.data;
     }
     return success(res, 200, 'PATCH', req.ip, result.message, data);
-    //return res.status(200).json({ code: 200, message: result.message, data: data });
   } catch (err) {
     let code;
     switch (err.message) {
@@ -146,7 +142,6 @@ const editProfile = async (req, res) => {
         break;
     }
     return fail(res, code, 'PATCH', req.ip, err.message);
-    //return res.status(code).json({ code: code, message: err.message });
   }
 };
 
