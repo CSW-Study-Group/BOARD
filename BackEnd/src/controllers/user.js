@@ -53,9 +53,9 @@ const postRegister = async (req, res) => {
   let { email, password, user_name } = req.body;
 
   try {
-    await user.verifyRegister(email, password, user_name).then((result) => {
+    await user.verifyRegister(email, password, user_name).then(async (result) => {
       if (result) {
-        user.createUser(email, password, user_name);
+        await user.createUser(email, password, user_name);
         return res.status(200).json({
           code: 200,
         });
