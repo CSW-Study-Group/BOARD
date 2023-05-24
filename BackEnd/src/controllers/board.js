@@ -7,7 +7,7 @@ const {
   getBoard,
   postBoard,
   searchByPostId,
-  getComments,
+  searchCommentByPostId,
   editPost,
   deletePost,
   countPost,
@@ -109,8 +109,8 @@ const boardGetByPostId = async (req, res) => {
   try {
     let data = await searchByPostId(post_id);
 
-    let comments = await getComments(post_id);
-    res.render('post/read', { post: data, comments: comments });
+    let comments = await searchCommentByPostId(post_id, 5, 1);
+    res.render('post/read', { post: data, count: comments.count, comments: comments.rows, more: comments.more });
   } catch (err) {
     if (err.message === 'No data.') {
       return res.status(404).json({ code: 404, message: err.message });
@@ -174,7 +174,7 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return res.status(result.code).json(result);
+    return result;
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
   }
@@ -225,7 +225,7 @@ const boardCommentDelete = (req, res) => {
             where: {
               id: comment_id,
             },
-          }
+          },
         ).then(() => {
           return res.status(200).json({ code: 200 });
         });
@@ -235,6 +235,29 @@ const boardCommentDelete = (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
+  }
+};
+
+/**
+ * 댓글 더보기
+ */
+const boardCommentMore = async (req, res) => {
+  const { id: post_id, comment_page: comment_page } = req.params;
+
+  try {
+    const comments = await searchCommentByPostId(post_id, 5, comment_page);
+    return res.status(200).json({
+      code: 200,
+      data: {
+        comments: comments,
+      },
+    });
+  } catch (err) {
+    if (err.message === 'No data.') {
+      return res.status(404).json({ code: 404, message: err.message });
+    } else {
+      return res.status(500).json({ code: 500, message: err.message });
+    }
   }
 };
 
@@ -311,6 +334,7 @@ module.exports = {
   boardRecommand,
   boardCommentPost,
   boardCommentDelete,
+  boardCommentMore,
   postAuthCheck,
   boardRecommandCheck,
   postView,

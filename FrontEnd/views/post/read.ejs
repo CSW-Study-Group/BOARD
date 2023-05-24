@@ -41,8 +41,9 @@
             </div>
         </div>
         <div class="comments">
-            <span class="title">comment</span>
-            <% for (let comment of comments) { %>
+            <span class="title"><%= count;%> comment</span>
+            <% if ( count > 0 ) { %>
+                <% for (let comment of comments) { %>
                 <div class="card comment">
                     <div>
                         <img src="<%= comment.User.profile %>" class="rounded-circle" alt="..." width=25 height=25>
@@ -56,7 +57,14 @@
                     </div>
                     <div class="body"><%= comment.comment %></div>
                 </div>
-            <% }%>
+                <% }%>
+                <% if ( more ) { %> 
+                    <!-- 더보기 버튼 -->
+                    <div class="more">
+                        <button class="btn btn-secondary" type="button" onclick="more_comment_post()">더보기</button>
+                    </div>
+                <% }%>
+            <% } %>
             <div class="form-group new-comment">
                 <span>new comment</span>
                 <textarea class="form-control rounded" name="comment_body"></textarea>

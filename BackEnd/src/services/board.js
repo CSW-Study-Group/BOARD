@@ -64,8 +64,9 @@ const searchByPostId = async (post_id) => {
   return data;
 };
 
-const getComments = async (post_id) => {
-  return await Comment.findAll({
+// 페이징 처리되는 댓글 limit개씩 조회
+const searchCommentByPostId = async (post_id, limit, page) => {
+  let comment = await Comment.findAndCountAll({
     include: [
       {
         model: User,
@@ -73,8 +74,19 @@ const getComments = async (post_id) => {
       },
     ],
     where: { post_id: post_id, deleted_YN: 'N' },
-    limit: 10,
+    order: [['created_at', 'ASC']],
+    limit: Math.max(1, parseInt(limit)),
+    offset: (Math.max(1, parseInt(page)) - 1) * Math.max(1, parseInt(limit)),
   });
+
+  // 댓글이 아직 다 노출되지 않아 더보기가 가능한지 여부
+  if (comment.count > page * limit) {
+    comment.more = true;
+  } else {
+    comment.more = false;
+  }
+
+  return comment;
 };
 
 /**
@@ -168,7 +180,7 @@ module.exports = {
   getBoard,
   postBoard,
   searchByPostId,
-  getComments,
+  searchCommentByPostId,
   editPost,
   deletePost,
   countPost,

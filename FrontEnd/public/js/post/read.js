@@ -181,6 +181,62 @@ function create_comment_post() {
 
 }
 
+// 댓글 더보기. 댓글 개수를 가져와서 불러올 페이지를 계산하여 추가 댓글을 가져온다. 댓글은 5개 단위이다.
+function more_comment_post() {
+
+    // class이름이 comment 인 요소들의 개수를 가져온다
+    let comment_count = document.getElementsByClassName("comment").length;
+    let comment_page = Math.ceil(comment_count / 5) + 1;
+
+    fetch(`/board/${content_id}/comment/${comment_page}`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'authorization': localStorage.getItem('access_token')
+        }
+    })
+        .then((res) => res.json())
+        .then((res) => {
+            if (res.code === 200) {
+                let comments = res.data.comments;
+                // comments.more이 false 면 클래스가 more인 요소 숨김
+                if (!comments.more) {
+                    // 클래스가 more인 요소를 가져온다
+                    let more_btn = document.getElementsByClassName("more")[0];
+                    more_btn.style.display = "none";
+                }
+
+                let comment_list = comments.rows;
+                // 가져온 comments를 순회하며 댓글을 추가한다.
+                comment_list.forEach((comment) => {
+                    let comment_div = document.createElement("div");
+                    let create_at = new Date(comment.created_at);
+                    create_at.setHours(create_at.getHours() + 9);
+                    comment_div.innerHTML = `
+                    <div class="card comment">
+                        <div>
+                            <img src="${ comment.User.profile }" class="rounded-circle" alt="..." width=25 height=25>
+                            <span class="name">${ comment.User.user_name }</span>
+                            <button class="btn btn-secondary delete" type="button" onclick="delete_comment_post(${ comment.id })">✖</button>
+                            <span class="date">
+                                ${ create_at.toISOString().replace('T', ' ').substring(0, 19) }
+                            </span>
+                        </div>
+                        <div class="body">${comment.comment}</div>
+                    </div>`
+                    
+                    // 클래스가 comment 인 마지막 요소 뒤에 추가한다
+                    let comment_list = document.getElementsByClassName("comment");
+                    comment_list[comment_list.length - 1].after(comment_div);
+
+                });
+            }
+        })
+        .catch((err) => {
+            alert('An error occurred while processing your request. Please try again later.');
+        });
+    }
+
 function delete_comment_post(comment_id) {
     fetch(`/board/${content_id}/comment/${comment_id}`, {
         method: "DELETE",
