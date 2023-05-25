@@ -13,7 +13,7 @@ const sequelize = new Sequelize(
     host: config.get('mysql.host'),
     dialect: config.get('mysql.dialect'),
     timezone: config.get('mysql.timezone'), // Asia/Seoul: +09:00
-    logging: config.get('server.status') === 'test' ? false : true,
+    logging: config.get('server.status') === 'test' ? false : console.log,
   },
 );
 
