@@ -4,7 +4,7 @@ const { User } = require('../utils/connect');
 const { postLogin, postRegister, getProfile } = require('../controllers/user');
 
 /**
- * 로그인 테스트
+ * * 로그인 테스트
  * 1. 로그인 성공
  * 2. 존재하지 않는 email
  * 3. 비밀번호 틀림
@@ -63,7 +63,7 @@ describe('postLogin', () => {
 });
 
 /**
- * 회원가입 테스트
+ * * 회원가입 테스트
  * 1. 회원가입 성공
  * 2. 이미 존재하는 username
  * 3. 이미 존재하는 email
@@ -161,6 +161,11 @@ describe('postRegister', () => {
   });
 });
 
+/**
+ * * 프로필 조회 테스트
+ * 1. 프로필 조회 성공
+ * 2. 프로필 조회 실패
+ */
 describe('getProfile', () => {
   let req, res;
 
