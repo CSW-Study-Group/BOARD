@@ -1,7 +1,7 @@
 'use strict';
 
 const { User } = require('../utils/connect');
-const { postLogin, postRegister } = require('../controllers/user');
+const { postLogin, postRegister, getProfile } = require('../controllers/user');
 
 /**
  * 로그인 테스트
@@ -158,5 +158,56 @@ describe('postRegister', () => {
       code: 405,
       message: 'Please input password.',
     });
+  });
+});
+
+describe('getProfile', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      decoded: {
+        id: '1',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  afterEach(async () => {
+    jest.clearAllMocks();
+  });
+
+  it('should return the user profile if found', async () => {
+    await getProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        data: expect.objectContaining({
+          id: 1,
+          user_name: 'testuser',
+          email: 'testuser@example.com',
+          profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
+        }),
+      }),
+    );
+  });
+
+  it('should return status 400 if profile is not found', async () => {
+    req.decoded.id = '2';
+
+    await getProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 400,
+        message: 'Can not find profile.',
+      }),
+    );
   });
 });

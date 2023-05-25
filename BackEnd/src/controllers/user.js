@@ -90,12 +90,11 @@ const postRegister = async (req, res) => {
  */
 const getProfile = async (req, res) => {
   try {
-    user.findUserById(req.decoded.id).then((data) => {
-      if (!data) {
-        throw new Error('Can not find profile.');
-      }
-      return res.status(200).json({ code: 200, data: data });
-    });
+    const data = await user.findUserById(req.decoded.id);
+    if (!data) {
+      throw new Error('Can not find profile.');
+    }
+    return res.status(200).json({ code: 200, data: data });
   } catch (err) {
     let code;
     switch (err.message) {
