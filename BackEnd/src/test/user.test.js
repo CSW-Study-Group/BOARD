@@ -1,11 +1,24 @@
 'use strict';
 
+const { User } = require('../utils/connect');
 const { postLogin, postRegister } = require('../controllers/user');
 
+/**
+ * 로그인 테스트
+ * 1. 로그인 성공
+ * 2. 존재하지 않는 email
+ * 3. 비밀번호 틀림
+ */
 describe('postLogin', () => {
-  let res;
+  let req, res;
 
   beforeEach(() => {
+    req = {
+      body: {
+        email: 'testuser@example.com',
+        password: 'password',
+      },
+    };
     res = {
       status: jest.fn().mockReturnThis(), // 메서드 체이닝이 가능해야하므로 자기자신 res를 반환
       json: jest.fn(),
@@ -17,13 +30,6 @@ describe('postLogin', () => {
   });
 
   test('should return 200 with access_token and refresh_token if login is successful', async () => {
-    const req = {
-      body: {
-        email: 'test@example.com',
-        password: 'password123',
-      },
-    };
-
     await postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
@@ -37,12 +43,7 @@ describe('postLogin', () => {
 
   test('should return 405 if email is incorrect', async () => {
     const error = new Error('Unauthorized email.');
-    const req = {
-      body: {
-        email: 'test123@example.com',
-        password: 'password123',
-      },
-    };
+    req.body.email = 'testuser123@example.com';
 
     await postLogin(req, res);
 
@@ -52,12 +53,7 @@ describe('postLogin', () => {
 
   test('should return 405 if password is incorrect', async () => {
     const error = new Error('Incorrect password.');
-    const req = {
-      body: {
-        email: 'test@example.com',
-        password: 'password',
-      },
-    };
+    req.body.password = 'password123';
 
     await postLogin(req, res);
 
@@ -66,15 +62,24 @@ describe('postLogin', () => {
   });
 });
 
+/**
+ * 회원가입 테스트
+ * 1. 회원가입 성공
+ * 2. 이미 존재하는 username
+ * 3. 이미 존재하는 email
+ * 4. username 미입력
+ * 5. id(email) 미입력
+ * 6. password 미입력
+ */
 describe('postRegister', () => {
   let req, res;
 
   beforeEach(() => {
     req = {
       body: {
-        email: 'test123@example.com',
-        password: 'password123',
-        user_name: 'testuser123',
+        email: 'test_register@example.com',
+        password: 'password',
+        user_name: 'test_register',
       },
     };
     res = {
@@ -83,8 +88,9 @@ describe('postRegister', () => {
     };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    await User.destroy({ where: { email: 'test_register@example.com' } });
   });
 
   it('should register a new user and return status 200 if verification is successful', async () => {
@@ -94,52 +100,63 @@ describe('postRegister', () => {
     expect(res.json).toHaveBeenCalledWith({ code: 200 });
   });
 
-  // it('should return status 409 and error message if username or email already exists', async () => {
-  //   // user.verifyRegister 모듈의 반환 값을 Promise.resolve(false)로 설정
-  //   user.verifyRegister = jest.fn().mockResolvedValue(false);
+  it('should return status 409 and error message if username already exists', async () => {
+    req.body.user_name = 'testuser';
 
-  //   await postRegister(req, res);
+    await postRegister(req, res);
 
-  //   expect(user.verifyRegister).toHaveBeenCalledWith(
-  //     req.body.email,
-  //     req.body.password,
-  //     req.body.user_name
-  //   );
-  //   expect(res.status).toHaveBeenCalledWith(409);
-  //   expect(res.json).toHaveBeenCalledWith({
-  //     code: 409,
-  //     message: 'Exist username.',
-  //   });
-  // });
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 409,
+      message: 'Exist username.',
+    });
+  });
 
-  // it('should return status 405 and error message if any field is missing', async () => {
-  //   req.body.email = ''; // email 필드를 빈 문자열로 설정하여 누락된 필드로 가정
+  it('should return status 409 and error message if email already exists', async () => {
+    req.body.email = 'testuser@example.com';
 
-  //   await postRegister(req, res);
+    await postRegister(req, res);
 
-  //   expect(user.verifyRegister).not.toHaveBeenCalled();
-  //   expect(res.status).toHaveBeenCalledWith(405);
-  //   expect(res.json).toHaveBeenCalledWith({
-  //     code: 405,
-  //     message: 'Please input email.',
-  //   });
-  // });
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 409,
+      message: 'Exist email.',
+    });
+  });
 
-  // it('should return status 500 and error message for other errors', async () => {
-  //   // user.verifyRegister 모듈이 에러를 발생시키도록 설정
-  //   user.verifyRegister = jest.fn().mockRejectedValue(new Error('Unknown error'));
+  it('should return status 405 and error message if username field is missing', async () => {
+    req.body.user_name = '';
 
-  //   await postRegister(req, res);
+    await postRegister(req, res);
 
-  //   expect(user.verifyRegister).toHaveBeenCalledWith(
-  //     req.body.email,
-  //     req.body.password,
-  //     req.body.user_name
-  //   );
-  //   expect(res.status).toHaveBeenCalledWith(500);
-  //   expect(res.json).toHaveBeenCalledWith({
-  //     code: 500,
-  //     message: 'Unknown error',
-  //   });
-  // });
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 405,
+      message: 'Please input username.',
+    });
+  });
+
+  it('should return status 405 and error message if id field is missing', async () => {
+    req.body.email = '';
+
+    await postRegister(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 405,
+      message: 'Please input id.',
+    });
+  });
+
+  it('should return status 405 and error message if password field is missing', async () => {
+    req.body.password = '';
+
+    await postRegister(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 405,
+      message: 'Please input password.',
+    });
+  });
 });
