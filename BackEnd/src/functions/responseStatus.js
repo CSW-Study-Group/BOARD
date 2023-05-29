@@ -4,13 +4,21 @@ const logger = require('../functions/winston');
 
 exports.success = (res, code, method, ip, message = 'No message.', data = 'No data.') => {
   logger.info(`${method} ${code} ${ip.replace(/:/g, '')} : '${message}'`);
-  return res.status(code).json({
-    code: code,
-    message: message,
-    data: data,
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-  });
+  if (typeof data.access_token === 'undefined' && typeof data.refresh_token === 'undefined') {
+    return res.status(code).json({
+      code: code,
+      message: message,
+      data: data,
+    });
+  } else {
+    return res.status(code).json({
+      code: code,
+      message: message,
+      data: data,
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
+  }
 };
 
 exports.fail = (res, code, method, ip, message = 'No message.', detail = 'No detail.') => {
