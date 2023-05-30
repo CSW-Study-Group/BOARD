@@ -13,33 +13,40 @@ const { editImage } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
-router.post('/login',
+router.post(
+  '/login',
   [
-    check('email').isEmail(),
-    check('password').notEmpty(),
+    check('email', 'Please input id.').notEmpty(),
+    check('password', 'Please input password.').notEmpty(),
     validator
   ],
-  ctrl.postLogin
+  ctrl.postLogin,
 );
 
-router.post('/register',
+router.post(
+  '/register',
   [
-    check('user_name').isLength({ min: 3, max: 30 }),
-    check('email').isEmail().isLength({ max: 30 }),
-    check('password').isLength({ min: 3, max: 100 }),
+    check('user_name', 'Username must be longer than 2 characters & shorter than 31 characters.').isLength({ min: 3, max: 30 }),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
+    check('password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
     validator,
   ],
   ctrl.postRegister,
 );
 
 router.get('/profile', auth, ctrl.getProfile);
-router.patch('/profile',
+router.patch(
+  '/profile',
   [
     auth,
     // !Error : Multipart
     check('user_name').isLength({ min: 3, max: 30 }),
     check('email').isEmail().isLength({ max: 30 }),
-    validator
+    validator,
   ],
   editImage,
   ctrl.editProfile,

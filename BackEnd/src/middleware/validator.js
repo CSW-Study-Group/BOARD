@@ -7,5 +7,5 @@ exports.validator = (req, res, next) => {
   if (errors.isEmpty()) {
     return next();
   }
-  return res.status(400).json({ message: errors.array()[0].msg });
+  return res.status(400).json({ code: 400, message: errors.array()[0].msg });
 };
