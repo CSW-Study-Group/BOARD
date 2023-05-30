@@ -33,7 +33,7 @@ const upload = multer({
  * 이미지 받아와서 서버에 저장
  * 파일의 크기가 10Mb 넘어가면 400 반환
  */
-const editImage = async (req, res, next) => {
+const imgUpload = async (req, res, next) => {
   try {
     upload.single('image')(req, res, (err) => {
       // 프로필 사진 업로드
@@ -54,4 +54,4 @@ const editImage = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, editImage };
+module.exports = { upload, imgUpload };

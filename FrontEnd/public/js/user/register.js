@@ -14,15 +14,24 @@ function Register() {
     password.value = "";
   };
 
-  if (user_name.value.length < 3 || user_name.value.length > 30) {
+  if (!user_name.value) return alert("Please input username.");
+  else if (user_name.value.length < 3 || user_name.value.length > 30) {
     inputFormInit();
     return alert("Username must be longer than 2 characters & shorter than 31 characters.");
   }
-  if (!emailRegex.test(email.value) || email.value.length > 30) {
+
+  if (!email.value) return alert("Please input email.");
+  else if (!emailRegex.test(email.value)) {
     inputFormInit();
-    return alert("Email must be in the correct format & shorter than 31 characters.");
+    return alert("Email must be in the correct format.");
   }
-  if (password.value.length < 3 || password.value.length > 100) {
+  else if (email.value.length > 30) {
+    inputFormInit();
+    return alert("Email must be shorter than 31 characters.");
+  }
+
+  if (!password.value) return alert("Please input password.");
+  else if (password.value.length < 3 || password.value.length > 100) {
     inputFormInit();
     return alert("Password must be longer than 2 characters & shorter than 101 characters.");
   }

@@ -9,7 +9,7 @@ const router = express.Router();
 const { validator } = require('../middleware/validator');
 const { check } = require('express-validator');
 
-const { editImage } = require('../middleware/multer.js');
+const { imgUpload } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
@@ -41,14 +41,17 @@ router.post(
 router.get('/profile', auth, ctrl.getProfile);
 router.patch(
   '/profile',
+  auth,
+  imgUpload,
   [
-    auth,
-    // !Error : Multipart
-    check('user_name').isLength({ min: 3, max: 30 }),
-    check('email').isEmail().isLength({ max: 30 }),
+    check('user_name').isLength({ min: 3, max: 30 }).withMessage('Username must be longer than 2 characters & shorter than 31 characters.'),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
     validator,
   ],
-  editImage,
   ctrl.editProfile,
 );
 

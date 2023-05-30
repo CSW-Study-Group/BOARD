@@ -15,10 +15,10 @@ function updateProfile() {
     const email = document.getElementsByName("email")[0].value;
 
     if(!user_name) return alert("Please input username.");
-    else if(user_name.length < 3) return alert("Username must be longer than 2 characters.");
+    else if(user_name.length < 3 || user_name.length > 30) return alert("Username must be longer than 2 characters & shorter than 31 characters.");
 
     if(!email) return alert("Please input email.");
-    else if(email.length < 3) return alert("Email must be longer than 3 characters.");
+    else if(email.length > 30) return alert("Email must be shorter than 31 characters.");
     else if(!emailRegex.test(email)) return alert("Email must be in the correct format.");
 
     if(is_disabled === true) {
