@@ -95,7 +95,7 @@ const boardGet = async (req, res) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -113,9 +113,9 @@ const boardGetByPostId = async (req, res) => {
     res.render('post/read', { post: data });
   } catch (err) {
     if (err.message === 'No data.') {
-      return fail(res, 404, 'GET', req.ip, err.message);
+      return fail(res, 404, err.message);
     } else {
-      return fail(res, 500, 'GET', req.ip, err.message);
+      return fail(res, 500, err.message);
     }
   }
 };
@@ -129,10 +129,10 @@ const boardPost = (req, res) => {
 
   try {
     postBoard(title, content, user_id).then(() => {
-      return success(res, 200, 'POST', req.ip, '게시글이 작성되었습니다.');
+      return success(res, 200, 'Post created success.');
     });
   } catch (err) {
-    return fail(res, 500, 'POST', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -144,10 +144,10 @@ const boardEditByPostId = (req, res) => {
   const { id: post_id } = req.params;
   try {
     editPost(title, content, post_id).then(() => {
-      return success(res, 200, 'PATCH', req.ip, '게시글이 수정되었습니다.');
+      return success(res, 200, 'Post edited success.');
     });
   } catch (err) {
-    return fail(res, 500, 'PATCH', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -161,7 +161,7 @@ const boardDeleteByPostId = (req, res) => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {
-    return fail(res, 500, 'DELETE', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -174,9 +174,9 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return success(res, 200, 'POST', req.ip, result.message);
+    return success(res, 200, result.message);
   } catch (err) {
-    return fail(res, 500, 'POST', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -190,13 +190,13 @@ const postAuthCheck = (req, res) => {
   try {
     authCheckPost(content_id).then((data) => {
       if (user_id === data.user_id) {
-        return success(res, 200, 'GET', req.ip, 'authorized');
+        return success(res, 200, 'authorized');
       } else {
-        return success(res, 401, 'GET', req.ip, 'unauthorized');
+        return success(res, 401, 'unauthorized');
       }
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 
@@ -211,14 +211,14 @@ const boardRecommandCheck = (req, res) => {
     recommandCheckBoard(user_id, content_id).then((data) => {
       if (data !== null) {
         // 추천 O
-        return success(res, 200, 'GET', req.ip, 'created');
+        return success(res, 200,'created');
       } else {
         // 추천 X
-        return success(res, 200, 'GET', req.ip, 'deleted');
+        return success(res, 200,'deleted');
       }
     });
   } catch (err) {
-    return fail(res, 500, 'GET', req.ip, err.message);
+    return fail(res, 500, err.message);
   }
 };
 

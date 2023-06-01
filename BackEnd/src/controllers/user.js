@@ -19,7 +19,7 @@ const postLogin = async (req, res) => {
         access_token: data.access_token,
         refresh_token: data.refresh_token,
       };
-      return success(res, 200, 'POST', req.ip, 'Authorize success.', token);
+      return success(res, 200, 'Authorize success.', token);
     });
   } catch (err) {
     let code;
@@ -32,7 +32,7 @@ const postLogin = async (req, res) => {
         code = 500;
         break;
     }
-    return fail(res, code, 'POST', req.ip, err.message);
+    return fail(res, code, err.message);
   }
 };
 
@@ -54,7 +54,7 @@ const postRegister = async (req, res) => {
     await user.verifyRegister(email, password, user_name).then((result) => {
       if (result) {
         user.createUser(email, password, user_name);
-        return success(res, 200, 'POST', req.ip);
+        return success(res, 200, 'Register success.');
       } else {
         throw new Error('Services error.');
       }
@@ -75,7 +75,7 @@ const postRegister = async (req, res) => {
         code = 500;
         break;
     }
-    return fail(res, code, 'POST', req.ip, err.message);
+    return fail(res, code, err.message);
   }
 };
 
@@ -90,7 +90,7 @@ const getProfile = async (req, res) => {
       if (!data) {
         throw new Error('Can not find profile.');
       }
-      return success(res, 200, 'GET', req.ip, 'No message', data);
+      return success(res, 200, 'No message', data);
     });
   } catch (err) {
     let code;
@@ -102,7 +102,7 @@ const getProfile = async (req, res) => {
         code = 500;
         break;
     }
-    return fail(res, code, 'GET', req.ip, err.message);
+    return fail(res, code, err.message);
   }
 };
 
@@ -126,7 +126,7 @@ const editProfile = async (req, res) => {
     } else if (result.message === 'Profile Edit Success!') {
       data = result.data;
     }
-    return success(res, 200, 'PATCH', req.ip, result.message, data);
+    return success(res, 200, result.message, data);
   } catch (err) {
     let code;
     switch (err.message) {
@@ -141,7 +141,7 @@ const editProfile = async (req, res) => {
         code = 500;
         break;
     }
-    return fail(res, code, 'PATCH', req.ip, err.message);
+    return fail(res, code, err.message);
   }
 };
 
