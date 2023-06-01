@@ -6,15 +6,58 @@ const { issuanceToken } = require('../functions/signJWT');
 const express = require('express');
 const router = express.Router();
 
-const { editImage } = require('../middleware/multer.js');
+const { validator } = require('../middleware/validator');
+const { check } = require('express-validator');
+
+const { imgUpload } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
-router.post('/login', ctrl.postLogin);
-router.post('/register', ctrl.postRegister);
+router.post(
+  '/login',
+  [check('email', 'Please input id.').notEmpty(), check('password', 'Please input password.').notEmpty(), validator],
+  ctrl.postLogin,
+);
+
+router.post(
+  '/register',
+  [
+    check('user_name', 'Username must be longer than 2 characters & shorter than 31 characters.').isLength({
+      min: 3,
+      max: 30,
+    }),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
+    check('password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({
+      min: 3,
+      max: 100,
+    }),
+    validator,
+  ],
+  ctrl.postRegister,
+);
 
 router.get('/profile', auth, ctrl.getProfile);
-router.patch('/profile', auth, editImage, ctrl.editProfile);
+router.patch(
+  '/profile',
+  auth,
+  imgUpload,
+  [
+    check('user_name')
+      .isLength({ min: 3, max: 30 })
+      .withMessage('Username must be longer than 2 characters & shorter than 31 characters.'),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
+    validator,
+  ],
+  ctrl.editProfile,
+);
 
 // token refresh
 router.get('/token/refresh', issuanceToken);
