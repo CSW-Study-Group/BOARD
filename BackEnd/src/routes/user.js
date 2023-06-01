@@ -3,40 +3,64 @@
 const { auth } = require('../middleware/verifyJWT');
 const { issuanceToken } = require('../functions/signJWT');
 
-const multer = require('multer');
-const upload = require("../middleware/multer");
-
 const express = require('express');
 const router = express.Router();
 
+const { validator } = require('../middleware/validator');
+const { check } = require('express-validator');
+
+const { imgUpload } = require('../middleware/multer.js');
 const ctrl = require('../controllers/user');
 
 // methods for user
-router.post('/login', ctrl.loginPost);
-router.post('/register', ctrl.registerPost);
+router.post(
+  '/login',
+  [
+    check('email', 'Please input id.').notEmpty(),
+    check('password', 'Please input password.').notEmpty(),
+    validator
+  ],
+  ctrl.postLogin,
+);
 
-router.get('/profile', auth, ctrl.profileGet);
-router.patch('/profile', auth, (req, res) => {
-    try {
-        upload.single('image')(req, res, (err) => {
-            if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') { // 파일 크기가 제한을 초과한 경우
-                return res.status(400).json({ code: 400, message: 'File size exceeded. please check the file size and try again (not exceeding 10MB)' });
-            } else if (err) { // 그 외의 에러인 경우
-                return res.status(500).json({ code: 500, message: 'Server error.' });
-            }
-            ctrl.profileEdit(req, res); // 파일 업로드가 성공한 경우
-        });
-    } catch (err) {
-        return res.status(500).json({ code: 500, message: err.message });
-    }
-});
+router.post(
+  '/register',
+  [
+    check('user_name', 'Username must be longer than 2 characters & shorter than 31 characters.').isLength({ min: 3, max: 30 }),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
+    check('password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    validator,
+  ],
+  ctrl.postRegister,
+);
+
+router.get('/profile', auth, ctrl.getProfile);
+router.patch(
+  '/profile',
+  auth,
+  imgUpload,
+  [
+    check('user_name').isLength({ min: 3, max: 30 }).withMessage('Username must be longer than 2 characters & shorter than 31 characters.'),
+    check('email')
+      .isEmail()
+      .withMessage('Email must be in the correct format.')
+      .isLength({ max: 30 })
+      .withMessage('Email must be shorter than 31 characters.'),
+    validator,
+  ],
+  ctrl.editProfile,
+);
 
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
 // rendering page
-router.get('/login', ctrl.loginView);
-router.get('/register', ctrl.registerView);
-router.get('/profile/output/', ctrl.profileView);
+router.get('/login', ctrl.viewLogin);
+router.get('/register', ctrl.viewRegister);
+router.get('/profile/output/', ctrl.viewProfile);
 
 module.exports = router;
