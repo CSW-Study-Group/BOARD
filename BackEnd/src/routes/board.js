@@ -47,6 +47,10 @@ router.post(
   ctrl.boardRecommand,
 );
 
+router.post('/:id/comment', auth, ctrl.boardCommentPost);
+router.delete('/:id/comment/:comment_id', auth, ctrl.boardCommentDelete);
+router.get('/:id/comment/:comment_page', auth, ctrl.boardCommentMore);
+
 // check auth, recommand status
 router.get(
   '/:id/auth',

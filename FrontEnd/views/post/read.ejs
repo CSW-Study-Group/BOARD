@@ -40,6 +40,37 @@
                 </div>
             </div>
         </div>
+        <div class="comments">
+            <span class="title"><%= count;%> comment</span>
+            <% if ( count > 0 ) { %>
+                <% for (let comment of comments) { %>
+                <div class="card comment">
+                    <div>
+                        <img src="<%= comment.User.profile %>" class="rounded-circle" alt="..." width=25 height=25>
+                        <span class="name"><%= comment.User.user_name %></span>
+                        <button class="btn btn-secondary delete" type="button" onclick="delete_comment_post(<%= comment.id %>)">✖</button>
+                        <span class="date">
+                            <% let create_at = new Date(comment.created_at) %>
+                            <% create_at.setHours(create_at.getHours() + 9); %>
+                            <%= create_at.toISOString().replace('T', ' ').substring(0, 19);%>
+                        </span>
+                    </div>
+                    <div class="body"><%= comment.comment %></div>
+                </div>
+                <% }%>
+                <% if ( more ) { %> 
+                    <!-- 더보기 버튼 -->
+                    <div class="more">
+                        <button class="btn btn-secondary" type="button" onclick="more_comment_post()">더보기</button>
+                    </div>
+                <% }%>
+            <% } %>
+            <div class="form-group new-comment">
+                <span>new comment</span>
+                <textarea class="form-control rounded" name="comment_body"></textarea>
+                <button class="btn btn-info" id="create_comment_btn" type="button" onclick="create_comment_post()">Post new comment</button>
+            </div>
+        </div>
 
         <div class="mt-3">
             <form name="method_form" action="/board/<%= post.id %>?_method=delete" method="post">
