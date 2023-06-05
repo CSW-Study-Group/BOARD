@@ -224,7 +224,7 @@ function more_comment_post() {
                         </div>
                         <div class="body">${comment.comment}</div>
                     </div>`
-                    
+
                     // 클래스가 comment 인 마지막 요소 뒤에 추가한다
                     let comment_list = document.getElementsByClassName("comment");
                     comment_list[comment_list.length - 1].after(comment_div);
@@ -270,7 +270,7 @@ function delete_comment_post(comment_id) {
                     })
             } else { // 401 or 500
                 if(res.message === "unauthorized") {
-                    alert("댓글 작성자만 삭제할 수 있습니다.");
+                    alert("Only the author of the comment can delete it.");
                 } else {
                     alert(res.message);
                     location.href = "/user/login";
