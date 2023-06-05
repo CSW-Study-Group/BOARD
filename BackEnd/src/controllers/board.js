@@ -92,6 +92,7 @@ const boardGet = async (req, res) => {
 
     const post_count = await countPost();
     if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
+    if(!Number.isInteger(page)) page = parseInt(page) + 1;
 
     await getBoard(where_user, where_content, limit, page).then((data) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
@@ -177,7 +178,7 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return success(res, 200, result.message);
+    return success(res, 200, result.message, result.data);
   } catch (err) {
     return fail(res, 500, err.message);
   }
