@@ -1,11 +1,13 @@
 'use strict';
 
 const board = require('../services/board');
+const { User, Post, Comment } = require('../utils/connect');
 
 const {
   getBoard,
   postBoard,
   searchByPostId,
+  searchCommentByPostId,
   editPost,
   deletePost,
   countPost,
@@ -16,6 +18,8 @@ const {
 } = board;
 
 var { createSearchQuery } = require('../functions/query');
+
+const { success, fail } = require('../functions/responseStatus');
 
 const { Op } = require('sequelize');
 
@@ -36,7 +40,8 @@ const boardGet = async (req, res) => {
   page = parseInt(page);
   limit = parseInt(limit);
 
-  let where_content = null, where_user = null;
+  let where_content = null,
+    where_user = null;
 
   const rendering = (res, posts, message, currentPage = 1, maxPage = 1, limit = 5) => {
     return res.render('post/index', {
@@ -87,12 +92,13 @@ const boardGet = async (req, res) => {
 
     const post_count = await countPost();
     if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
+    if(!Number.isInteger(page)) page = parseInt(page) + 1;
 
     await getBoard(where_user, where_content, limit, page).then((data) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -106,12 +112,14 @@ const boardGetByPostId = async (req, res) => {
 
   try {
     let data = await searchByPostId(post_id);
-    res.render('post/read', { post: data });
+
+    let comments = await searchCommentByPostId(post_id, 5, 1);
+    res.render('post/read', { post: data, count: comments.count, comments: comments.rows, more: comments.more });
   } catch (err) {
     if (err.message === 'No data.') {
-      return res.status(404).json({ code: 404, message: err.message });
+      return fail(res, 404, err.message);
     } else {
-      return res.status(500).json({ code: 500, message: err.message });
+      return fail(res, 500, err.message);
     }
   }
 };
@@ -125,10 +133,10 @@ const boardPost = (req, res) => {
 
   try {
     postBoard(title, content, user_id).then(() => {
-      return res.status(200).json({ code: 200 });
+      return success(res, 200, 'Post created success.');
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -140,10 +148,10 @@ const boardEditByPostId = (req, res) => {
   const { id: post_id } = req.params;
   try {
     editPost(title, content, post_id).then(() => {
-      return res.status(200).json({ code: 200 });
+      return success(res, 200, 'Post edited success.');
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -157,7 +165,7 @@ const boardDeleteByPostId = (req, res) => {
       res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -170,9 +178,90 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return res.status(result.code).json(result);
+    return success(res, 200, result.message, result.data);
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+/**
+ * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
+ */
+const boardCommentPost = (req, res) => {
+  const { comment } = req.body;
+  const user_id = req.decoded.id;
+  let content_id = req.params.id;
+
+  try {
+    Comment.create({
+      comment: comment,
+      user_id: user_id,
+      post_id: content_id,
+    }).then(() => {
+      return res.status(200).json({ code: 200 });
+    });
   } catch (err) {
     return res.status(500).json({ code: 500, message: err.message });
+  }
+};
+
+/**
+ * 해당하는 id의 댓글을 삭제한다.
+ * 테이블의 deleted_YN을 Y로 변경한다.
+ */
+const boardCommentDelete = (req, res) => {
+  //테이블의 deleted_YN을 Y로 변경한다.
+  const comment_id = req.params.comment_id;
+  const user_id = req.decoded.id;
+  // comment의 user_id와 로그인한 user_id가 같으면 삭제한다.
+  try {
+    Comment.findOne({
+      where: {
+        id: comment_id,
+      },
+    }).then((data) => {
+      if (data.user_id === user_id) {
+        Comment.update(
+          {
+            deleted_YN: 'Y',
+          },
+          {
+            where: {
+              id: comment_id,
+            },
+          },
+        ).then(() => {
+          return res.status(200).json({ code: 200 });
+        });
+      } else {
+        return res.status(401).json({ code: 401, message: 'unauthorized' });
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ code: 500, message: err.message });
+  }
+};
+
+/**
+ * 댓글 더보기
+ */
+const boardCommentMore = async (req, res) => {
+  const { id: post_id, comment_page: comment_page } = req.params;
+
+  try {
+    const comments = await searchCommentByPostId(post_id, 5, comment_page);
+    return res.status(200).json({
+      code: 200,
+      data: {
+        comments: comments,
+      },
+    });
+  } catch (err) {
+    if (err.message === 'No data.') {
+      return res.status(404).json({ code: 404, message: err.message });
+    } else {
+      return res.status(500).json({ code: 500, message: err.message });
+    }
   }
 };
 
@@ -186,13 +275,13 @@ const postAuthCheck = (req, res) => {
   try {
     authCheckPost(content_id).then((data) => {
       if (user_id === data.user_id) {
-        return res.status(200).json({ code: 200, message: 'authorized' });
+        return success(res, 200, 'authorized');
       } else {
-        return res.status(401).json({ code: 401, message: 'unauthorized' });
+        return success(res, 401, 'unauthorized');
       }
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -207,20 +296,14 @@ const boardRecommandCheck = (req, res) => {
     recommandCheckBoard(user_id, content_id).then((data) => {
       if (data !== null) {
         // 추천 O
-        return res.status(200).json({
-          code: 200,
-          message: 'created',
-        });
+        return success(res, 200, 'created');
       } else {
         // 추천 X
-        return res.status(200).json({
-          code: 200,
-          message: 'deleted',
-        });
+        return success(res, 200, 'deleted');
       }
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
@@ -247,6 +330,9 @@ module.exports = {
   boardEditByPostId,
   boardDeleteByPostId,
   boardRecommand,
+  boardCommentPost,
+  boardCommentDelete,
+  boardCommentMore,
   postAuthCheck,
   boardRecommandCheck,
   postView,

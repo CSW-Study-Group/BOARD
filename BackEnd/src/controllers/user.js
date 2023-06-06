@@ -2,6 +2,7 @@
 
 const user = require('../services/user');
 
+const { success, fail } = require('../functions/responseStatus');
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
@@ -14,14 +15,11 @@ const postLogin = async (req, res) => {
   let { email, password } = req.body;
   try {
     await user.verifyLogin(email, password).then((data) => {
-      let access_token = data.access_token;
-      let refresh_token = data.refresh_token;
-      return res.status(200).json({
-        message: 'Authorize success.',
-        code: 200,
-        access_token,
-        refresh_token,
-      });
+      let token = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      };
+      return success(res, 200, 'Authorize success.', token);
     });
   } catch (err) {
     let code;
@@ -34,7 +32,7 @@ const postLogin = async (req, res) => {
         code = 500;
         break;
     }
-    return res.status(code).json({ code: code, message: err.message });
+    return fail(res, code, err.message);
   }
 };
 
@@ -55,10 +53,8 @@ const postRegister = async (req, res) => {
   try {
     await user.verifyRegister(email, password, user_name).then(async (result) => {
       if (result) {
-        await user.createUser(email, password, user_name);
-        return res.status(200).json({
-          code: 200,
-        });
+        user.createUser(email, password, user_name);
+        return success(res, 200, 'Register success.');
       } else {
         throw new Error('Services error.');
       }
@@ -79,7 +75,7 @@ const postRegister = async (req, res) => {
         code = 500;
         break;
     }
-    return res.status(code).json({ code: code, message: err.message });
+    return fail(res, code, err.message);
   }
 };
 
@@ -105,7 +101,7 @@ const getProfile = async (req, res) => {
         code = 500;
         break;
     }
-    return res.status(code).json({ code: code, message: err.message });
+    return fail(res, code, err.message);
   }
 };
 
@@ -129,7 +125,7 @@ const editProfile = async (req, res) => {
     } else if (result.message === 'Profile Edit Success!') {
       data = result.data;
     }
-    return res.status(200).json({ code: 200, message: result.message, data: data });
+    return success(res, 200, result.message, data);
   } catch (err) {
     let code;
     switch (err.message) {
@@ -144,7 +140,7 @@ const editProfile = async (req, res) => {
         code = 500;
         break;
     }
-    return res.status(code).json({ code: code, message: err.message });
+    return fail(res, code, err.message);
   }
 };
 

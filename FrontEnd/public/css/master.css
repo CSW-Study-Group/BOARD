@@ -58,6 +58,58 @@ body {
   max-width: 130px;
 }
 
+/* comments */
+.comments {
+  margin-top: 20px;
+}
+
+.comments .title{
+  font-weight: 600;
+  font-size: 1.3em;
+}
+
+.comments .more{
+  margin-top: 10px;
+}
+
+.comment {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.comment .name{
+  font-weight: 600;
+}
+
+.comment .date{
+  float: right;
+}
+
+.comment .body{
+  margin-top: 5px;
+  white-space : pre;
+}
+
+.comment .delete{
+  font-size: 13px;
+  margin-left: 10px;
+  padding: 3px 7px;
+  float: right;
+}
+
+.new-comment {
+  margin-top: 10px;
+}
+
+.new-comment span {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+.new-comment button {
+  margin-top: 10px;
+}
+
 /* profile  */
 .box {
   margin-top: 15px;
