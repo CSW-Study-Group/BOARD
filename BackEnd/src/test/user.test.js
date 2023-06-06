@@ -1,7 +1,7 @@
 'use strict';
 
-const { User } = require('../utils/connect');
-const { postLogin, postRegister, getProfile } = require('../controllers/user');
+const { sequelize, User } = require('../utils/connect');
+const { postLogin, postRegister, getProfile, editProfile } = require('../controllers/user');
 
 /**
  * * 로그인 테스트
@@ -15,7 +15,7 @@ describe('postLogin', () => {
   beforeEach(() => {
     req = {
       body: {
-        email: 'testuser@example.com',
+        email: 'test_user@example.com',
         password: 'password',
       },
     };
@@ -43,7 +43,7 @@ describe('postLogin', () => {
 
   test('should return 405 if email is incorrect', async () => {
     const error = new Error('Unauthorized email.');
-    req.body.email = 'testuser123@example.com';
+    req.body.email = 'test_user123@example.com';
 
     await postLogin(req, res);
 
@@ -101,7 +101,7 @@ describe('postRegister', () => {
   });
 
   it('should return status 409 and error message if username already exists', async () => {
-    req.body.user_name = 'testuser';
+    req.body.user_name = 'test_user';
 
     await postRegister(req, res);
 
@@ -113,7 +113,7 @@ describe('postRegister', () => {
   });
 
   it('should return status 409 and error message if email already exists', async () => {
-    req.body.email = 'testuser@example.com';
+    req.body.email = 'test_user@example.com';
 
     await postRegister(req, res);
 
@@ -194,8 +194,8 @@ describe('getProfile', () => {
         code: 200,
         data: expect.objectContaining({
           id: 1,
-          user_name: 'testuser',
-          email: 'testuser@example.com',
+          user_name: 'test_user',
+          email: 'test_user@example.com',
           profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
         }),
       }),
@@ -203,7 +203,7 @@ describe('getProfile', () => {
   });
 
   it('should return status 400 if profile is not found', async () => {
-    req.decoded.id = '2';
+    req.decoded.id = '100';
 
     await getProfile(req, res);
 
@@ -216,3 +216,56 @@ describe('getProfile', () => {
     );
   });
 });
+
+// describe('editProfile', () => {
+//   let transaction;
+//   let req, res;
+
+//   beforeEach(async () => {
+//     req = {
+//       body: {
+//         user_name: 'test_profile',
+//         email: 'test_profile@example.com',
+//       },
+//       decoded: {
+//         id: '2',
+//       },
+//       file: {
+//         fieldname: 'profileImage',
+//         originalname: 'test_image.jpg',
+//         mimetype: 'image/jpeg',
+//         buffer: Buffer.from('...', 'base64'),
+//       },
+//     };
+//     res = {
+//       status: jest.fn().mockReturnThis(),
+//       json: jest.fn(),
+//     };
+//     transaction = await sequelize.transaction();
+//   });
+
+//   afterEach(async () => {
+//     jest.clearAllMocks();
+//     await transaction.rollback();
+//   });
+
+//   it('should edit profile successfully', async () => {
+//     req.body.user_name = 'test_profile123';
+
+//     await editProfile(req, res);
+
+//     expect(res.status).toHaveBeenCalledWith(200);
+//     expect(res.json).toHaveBeenCalledWith(
+//       expect.objectContaining({
+//         code: 200,
+//         message: 'Profile Edit Success!',
+//         data: expect.objectContaining({
+//           id: 2,
+//           user_name: 'test_profile123',
+//           email: 'test_profile@example.com',
+//           profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
+//         }),
+//       }),
+//     );
+//   });
+// });
