@@ -11,6 +11,8 @@ const {
   editPost,
   deletePost,
   countPost,
+  commentPost,
+  commentDelete,
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,
@@ -185,7 +187,7 @@ const boardRecommand = async (req, res) => {
 };
 
 /**
- * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
+ * 유저로부터, 댓글 내용을 받아 생성한다.
  */
 const boardCommentPost = (req, res) => {
   const { comment } = req.body;
@@ -193,52 +195,30 @@ const boardCommentPost = (req, res) => {
   let content_id = req.params.id;
 
   try {
-    Comment.create({
-      comment: comment,
-      user_id: user_id,
-      post_id: content_id,
-    }).then(() => {
-      return res.status(200).json({ code: 200 });
+    commentPost(comment, user_id, content_id).then(() => {
+      return success(res, 200, 'Comment created success.');
     });
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
 /**
- * 해당하는 id의 댓글을 삭제한다.
- * 테이블의 deleted_YN을 Y로 변경한다.
+ * 댓글 id와 유저 id를 받아서 댓글을 삭제한다.
  */
-const boardCommentDelete = (req, res) => {
-  //테이블의 deleted_YN을 Y로 변경한다.
+const boardCommentDelete = async (req, res) => {
   const comment_id = req.params.comment_id;
   const user_id = req.decoded.id;
-  // comment의 user_id와 로그인한 user_id가 같으면 삭제한다.
+
   try {
-    Comment.findOne({
-      where: {
-        id: comment_id,
-      },
-    }).then((data) => {
-      if (data.user_id === user_id) {
-        Comment.update(
-          {
-            deleted_YN: 'Y',
-          },
-          {
-            where: {
-              id: comment_id,
-            },
-          },
-        ).then(() => {
-          return res.status(200).json({ code: 200 });
-        });
-      } else {
-        return res.status(401).json({ code: 401, message: 'unauthorized' });
-      }
-    });
+    await commentDelete(comment_id, user_id);
+    return success(res, 200, 'Comment deleted success.');
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    if(err.message === 'unauthorized') {
+      return fail(res, 401, err.message);
+    } else {
+      return fail(res, 500, err.message);
+    }
   }
 };
 
@@ -250,17 +230,12 @@ const boardCommentMore = async (req, res) => {
 
   try {
     const comments = await searchCommentByPostId(post_id, 5, comment_page);
-    return res.status(200).json({
-      code: 200,
-      data: {
-        comments: comments,
-      },
-    });
+    return success(res, 200, 'Comment created success.', comments);
   } catch (err) {
     if (err.message === 'No data.') {
-      return res.status(404).json({ code: 404, message: err.message });
+      return fail(res, 404, err.message);
     } else {
-      return res.status(500).json({ code: 500, message: err.message });
+      return fail(res, 500, err.message);
     }
   }
 };

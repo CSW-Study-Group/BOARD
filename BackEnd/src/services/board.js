@@ -176,6 +176,47 @@ const countPost = async () => {
   return await Post.count();
 };
 
+/**
+ * 유저로부터, 댓글 내용을 받아 댓글을 작성한다.
+ *
+ * @param {*} comment
+ * @param {*} user_id
+ * @param {*} content_id
+ * @returns
+ */
+const commentPost = async (comment, user_id, content_id) => {
+  return await Comment.create({
+    comment: comment,
+    user_id: user_id,
+    post_id: content_id,
+  });
+}
+
+/**
+ * 해당하는 id의 댓글을 삭제한다.
+ * 테이블의 deleted_YN을 Y로 변경한다.
+ *
+ * 두 값이 일치하지 않으면 삭제 X
+ * 두 값이 일치하면 삭제 O
+ *
+ * @param {*} comment_id
+ * @param {*} user_id
+ * @returns
+ */
+const commentDelete = async (comment_id, user_id) => {
+  try {
+    const comment = await Comment.findOne({ where: { id: comment_id } });
+
+    if (comment.user_id !== user_id) { throw new Error('unauthorized'); }
+
+    await Comment.update({ deleted_YN: 'Y' }, { where: { id: comment_id } });
+
+    return;
+  } catch (err) {
+    throw err;
+  }
+}
+
 module.exports = {
   getBoard,
   postBoard,
@@ -184,6 +225,8 @@ module.exports = {
   editPost,
   deletePost,
   countPost,
+  commentPost,
+  commentDelete,
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,

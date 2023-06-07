@@ -198,7 +198,7 @@ function more_comment_post() {
         .then((res) => res.json())
         .then((res) => {
             if (res.code === 200) {
-                let comments = res.data.comments;
+                let comments = res.data;
                 // comments.more이 false 면 클래스가 more인 요소 숨김
                 if (!comments.more) {
                     // 클래스가 more인 요소를 가져온다

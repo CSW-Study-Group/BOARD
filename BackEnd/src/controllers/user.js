@@ -3,6 +3,7 @@
 const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
+
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
