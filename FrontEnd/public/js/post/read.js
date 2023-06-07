@@ -230,6 +230,9 @@ function more_comment_post() {
                     comment_list[comment_list.length - 1].after(comment_div);
 
                 });
+            } else if (res.code === 401) {
+                alert('If you want to see more comments, please login first.');
+                location.href = "/user/login";
             }
         })
         .catch((err) => {
