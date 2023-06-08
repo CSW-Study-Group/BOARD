@@ -58,7 +58,7 @@ const boardGet = async (req, res) => {
   };
 
   page = !isNaN(page) ? page : 1;
-  if (page > 1000) {
+  if (page >= 1000) {
     return rendering(res, [], 'Page can only be a number less than 1000.');
   }
 
@@ -229,11 +229,12 @@ const boardCommentMore = async (req, res) => {
   const { id: post_id, comment_page: comment_page } = req.params;
 
   try {
+    if(comment_page >= 1000) throw new Error('Page can only be a number less than 1000.');
     const comments = await searchCommentByPostId(post_id, 5, comment_page);
-    return success(res, 200, 'Comment created success.', comments);
+    return success(res, 200, 'Bringing up comments success.', comments);
   } catch (err) {
-    if (err.message === 'No data.') {
-      return fail(res, 404, err.message);
+    if (err.message === 'Page can only be a number less than 1000.') {
+      return fail(res, 400, err.message);
     } else {
       return fail(res, 500, err.message);
     }
