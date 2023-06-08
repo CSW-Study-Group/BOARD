@@ -36,8 +36,10 @@ describe('postLogin', () => {
     expect(res.json).toHaveBeenCalledWith({
       message: 'Authorize success.',
       code: 200,
-      access_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
-      refresh_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
+      data: {
+        access_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
+        refresh_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
+      }
     });
   });
 
@@ -48,7 +50,7 @@ describe('postLogin', () => {
     await postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({ code: 405, message: error.message });
+    expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 
   test('should return 405 if password is incorrect', async () => {
@@ -58,7 +60,7 @@ describe('postLogin', () => {
     await postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({ code: 405, message: error.message });
+    expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 });
 
@@ -74,7 +76,7 @@ describe('postLogin', () => {
 describe('postRegister', () => {
   let req, res;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     req = {
       body: {
         email: 'test_register@example.com',
@@ -86,18 +88,18 @@ describe('postRegister', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
+    await User.destroy({ where: { email: 'test_register@example.com' } });
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     jest.clearAllMocks();
-    await User.destroy({ where: { email: 'test_register@example.com' } });
   });
 
   it('should register a new user and return status 200 if verification is successful', async () => {
     await postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ code: 200 });
+    expect(res.json).toHaveBeenCalledWith({ code: 200, message: "Register success.", data: "No data." });
   });
 
   it('should return status 409 and error message if username already exists', async () => {
@@ -107,7 +109,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
-      code: 409,
+      detail: "No detail.",
       message: 'Exist username.',
     });
   });
@@ -119,7 +121,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
-      code: 409,
+      detail: "No detail.",
       message: 'Exist email.',
     });
   });
@@ -131,7 +133,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      code: 405,
+      detail: "No detail.",
       message: 'Please input username.',
     });
   });
@@ -143,7 +145,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      code: 405,
+      detail: "No detail.",
       message: 'Please input id.',
     });
   });
@@ -155,7 +157,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      code: 405,
+      detail: "No detail.",
       message: 'Please input password.',
     });
   });
@@ -210,7 +212,7 @@ describe('getProfile', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        code: 400,
+        detail: "No detail.",
         message: 'Can not find profile.',
       }),
     );
