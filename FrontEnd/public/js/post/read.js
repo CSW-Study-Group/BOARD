@@ -198,7 +198,7 @@ function more_comment_post() {
         .then((res) => res.json())
         .then((res) => {
             if (res.code === 200) {
-                let comments = res.data.comments;
+                let comments = res.data;
                 // comments.more이 false 면 클래스가 more인 요소 숨김
                 if (!comments.more) {
                     // 클래스가 more인 요소를 가져온다
@@ -230,6 +230,9 @@ function more_comment_post() {
                     comment_list[comment_list.length - 1].after(comment_div);
 
                 });
+            } else if (res.code === 401) {
+                alert('If you want to see more comments, please login first.');
+                location.href = "/user/login";
             }
         })
         .catch((err) => {

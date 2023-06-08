@@ -14,8 +14,8 @@ const { check } = require('express-validator');
 router.get('/', ctrl.boardGet);
 router.post(
   '/',
+  auth,
   [
-    auth,
     check('title').notEmpty().withMessage('Title is required.'),
     check('content').notEmpty().withMessage('Content is required.'),
     validator,
@@ -24,15 +24,11 @@ router.post(
 );
 
 router.get('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardGetByPostId);
-router.delete(
-  '/:id',
-  [check('id').isInt().withMessage('Post ID must be a number.'), validator],
-  ctrl.boardDeleteByPostId,
-);
+router.delete('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardDeleteByPostId);
 router.patch(
   '/:id',
+  auth,
   [
-    auth,
     check('id').isInt().withMessage('Post ID must be a number.'),
     check('title').notEmpty().withMessage('Title is required.'),
     check('content').notEmpty().withMessage('Content is required.'),
@@ -41,34 +37,19 @@ router.patch(
   ctrl.boardEditByPostId,
 );
 
-router.post(
-  '/:id/recommand',
-  [auth, check('id').isInt().withMessage('Post ID must be a number.'), validator],
-  ctrl.boardRecommand,
-);
+router.post('/:id/recommand', auth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardRecommand);
 
-router.post('/:id/comment', auth, ctrl.boardCommentPost);
+// methods for board comment
+router.post('/:id/comment', auth, [check('comment').notEmpty().withMessage('Comment is required.'), validator], ctrl.boardCommentPost);
 router.delete('/:id/comment/:comment_id', auth, ctrl.boardCommentDelete);
 router.get('/:id/comment/:comment_page', auth, ctrl.boardCommentMore);
 
 // check auth, recommand status
-router.get(
-  '/:id/auth',
-  [auth, check('id').isInt().withMessage('Post ID must be a number.'), validator],
-  ctrl.postAuthCheck,
-);
-router.get(
-  '/:id/recommand',
-  [auth, check('id').isInt().withMessage('Post ID must be a number.'), validator],
-  ctrl.boardRecommandCheck,
-);
+router.get('/:id/auth', auth,[check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.postAuthCheck);
+router.get('/:id/recommand', auth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardRecommandCheck);
 
 // rendering page
 router.get('/post/new', ctrl.postView);
-router.get(
-  '/:id/edit',
-  [check('id').isInt().withMessage('Post ID must be a number.'), validator],
-  ctrl.editViewByPostId,
-);
+router.get('/:id/edit', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.editViewByPostId);
 
 module.exports = router;
