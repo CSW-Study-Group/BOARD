@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/CSW-Study-Group/BOARD/compare/v1.3.2...v1.5.0) (2023-06-08)
+
+
+### Features
+
+* 댓글 더보기 기능 ([ab93d54](https://github.com/CSW-Study-Group/BOARD/commit/ab93d546ed82fcd6d38e2a3b200dee84ef3ee8ae))
+* 댓글 불러오기 기능 ([6228fe8](https://github.com/CSW-Study-Group/BOARD/commit/6228fe87a4d16c1e3af20886e8e94d93e829438e))
+* 댓글 삭제 기능 구현 ([31e73b8](https://github.com/CSW-Study-Group/BOARD/commit/31e73b83d20092847b43cdc0b4fc279a3f5ca48b))
+* 댓글 삭제 작업중 ([2342a34](https://github.com/CSW-Study-Group/BOARD/commit/2342a347ac6e646ea7ce5764025cdf4109215cc1))
+* 댓글 작성하기 기능 ([4113be7](https://github.com/CSW-Study-Group/BOARD/commit/4113be77d4f896e7debce39971f811e2bb58a7ca))
+* Comment Sequelize 셋팅 ([09dd823](https://github.com/CSW-Study-Group/BOARD/commit/09dd823be6e26149c84e132a7df816c35d802497))
+* err, warn 레벨 로그 저장 기능 추가 ([e61a2f7](https://github.com/CSW-Study-Group/BOARD/commit/e61a2f768146e3409bebf8cb8c208667ee66d94f))
+* user 컨트롤러에 fail, success 함수 추가 ([9c59478](https://github.com/CSW-Study-Group/BOARD/commit/9c5947895005ce1cc8184853570319370e2966af))
+* warn, error 레벨 로그 생성 추가 ([00ebe82](https://github.com/CSW-Study-Group/BOARD/commit/00ebe82c58d6194b34147c95b0259e680ee78dec))
+
+
+### Bug Fixes
+
+* 추천수 표기 & 마지막 페이지 오류 ([b4d101c](https://github.com/CSW-Study-Group/BOARD/commit/b4d101c5cf547c9ced2c228d8a2cbf4572f395c0))
+* merge 충돌 해결 ([c9c9414](https://github.com/CSW-Study-Group/BOARD/commit/c9c9414271e386fb0139fc89d73687fd074fee0d))
+
 ### [1.3.3](https://github.com/CSW-Study-Group/BOARD/compare/v1.3.1...v1.3.3) (2023-05-03)
 
 
