@@ -1,6 +1,6 @@
 'use strict';
 
-const { User, Post } = require('../utils/connect');
+const { User, Post, Comment } = require('../utils/connect');
 
 const model = require('../utils/connect');
 const user_post = model.sequelize.models.user_post;
@@ -62,6 +62,31 @@ const searchByPostId = async (post_id) => {
   });
   await Post.increment({ view: 1 }, { where: { id: post_id } });
   return data;
+};
+
+// 페이징 처리되는 댓글 limit개씩 조회
+const searchCommentByPostId = async (post_id, limit, page) => {
+  let comment = await Comment.findAndCountAll({
+    include: [
+      {
+        model: User,
+        attributes: ['user_name', 'profile'],
+      },
+    ],
+    where: { post_id: post_id, deleted_YN: 'N' },
+    order: [['created_at', 'ASC']],
+    limit: Math.max(1, parseInt(limit)),
+    offset: (Math.max(1, parseInt(page)) - 1) * Math.max(1, parseInt(limit)),
+  });
+
+  // 댓글이 아직 다 노출되지 않아 더보기가 가능한지 여부
+  if (comment.count > page * limit) {
+    comment.more = true;
+  } else {
+    comment.more = false;
+  }
+
+  return comment;
 };
 
 /**
@@ -151,13 +176,57 @@ const countPost = async () => {
   return await Post.count();
 };
 
+/**
+ * 유저로부터, 댓글 내용을 받아 댓글을 작성한다.
+ *
+ * @param {*} comment
+ * @param {*} user_id
+ * @param {*} content_id
+ * @returns
+ */
+const commentPost = async (comment, user_id, content_id) => {
+  return await Comment.create({
+    comment: comment,
+    user_id: user_id,
+    post_id: content_id,
+  });
+}
+
+/**
+ * 해당하는 id의 댓글을 삭제한다.
+ * 테이블의 deleted_YN을 Y로 변경한다.
+ *
+ * 두 값이 일치하지 않으면 삭제 X
+ * 두 값이 일치하면 삭제 O
+ *
+ * @param {*} comment_id
+ * @param {*} user_id
+ * @returns
+ */
+const commentDelete = async (comment_id, user_id) => {
+  try {
+    const comment = await Comment.findOne({ where: { id: comment_id } });
+
+    if (comment.user_id !== user_id) { throw new Error('unauthorized'); }
+
+    await Comment.update({ deleted_YN: 'Y' }, { where: { id: comment_id } });
+
+    return;
+  } catch (err) {
+    throw err;
+  }
+}
+
 module.exports = {
   getBoard,
   postBoard,
   searchByPostId,
+  searchCommentByPostId,
   editPost,
   deletePost,
   countPost,
+  commentPost,
+  commentDelete,
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,

@@ -1,14 +1,18 @@
 'use strict';
 
 const board = require('../services/board');
+const { User, Post, Comment } = require('../utils/connect');
 
 const {
   getBoard,
   postBoard,
   searchByPostId,
+  searchCommentByPostId,
   editPost,
   deletePost,
   countPost,
+  commentPost,
+  commentDelete,
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,
@@ -54,7 +58,7 @@ const boardGet = async (req, res) => {
   };
 
   page = !isNaN(page) ? page : 1;
-  if (page > 1000) {
+  if (page >= 1000) {
     return rendering(res, [], 'Page can only be a number less than 1000.');
   }
 
@@ -90,6 +94,7 @@ const boardGet = async (req, res) => {
 
     const post_count = await countPost();
     if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
+    if(!Number.isInteger(page)) page = parseInt(page) + 1;
 
     await getBoard(where_user, where_content, limit, page).then((data) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
@@ -110,7 +115,8 @@ const boardGetByPostId = async (req, res) => {
   try {
     let data = await searchByPostId(post_id);
 
-    res.render('post/read', { post: data });
+    let comments = await searchCommentByPostId(post_id, 5, 1);
+    res.render('post/read', { post: data, count: comments.count, comments: comments.rows, more: comments.more });
   } catch (err) {
     if (err.message === 'No data.') {
       return fail(res, 404, err.message);
@@ -174,9 +180,64 @@ const boardRecommand = async (req, res) => {
 
   try {
     const result = await recommandBoard(user_id, content_id);
-    return success(res, 200, result.message);
+    return success(res, 200, result.message, result.data);
   } catch (err) {
     return fail(res, 500, err.message);
+  }
+};
+
+/**
+ * 유저로부터, 댓글 내용을 받아 생성한다.
+ */
+const boardCommentPost = (req, res) => {
+  const { comment } = req.body;
+  const user_id = req.decoded.id;
+  let content_id = req.params.id;
+
+  try {
+    commentPost(comment, user_id, content_id).then(() => {
+      return success(res, 200, 'Comment created success.');
+    });
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+/**
+ * 댓글 id와 유저 id를 받아서 댓글을 삭제한다.
+ */
+const boardCommentDelete = async (req, res) => {
+  const comment_id = req.params.comment_id;
+  const user_id = req.decoded.id;
+
+  try {
+    await commentDelete(comment_id, user_id);
+    return success(res, 200, 'Comment deleted success.');
+  } catch (err) {
+    if(err.message === 'unauthorized') {
+      return fail(res, 401, err.message);
+    } else {
+      return fail(res, 500, err.message);
+    }
+  }
+};
+
+/**
+ * 댓글 더보기
+ */
+const boardCommentMore = async (req, res) => {
+  const { id: post_id, comment_page: comment_page } = req.params;
+
+  try {
+    if(comment_page >= 1000) throw new Error('Page can only be a number less than 1000.');
+    const comments = await searchCommentByPostId(post_id, 5, comment_page);
+    return success(res, 200, 'Bringing up comments success.', comments);
+  } catch (err) {
+    if (err.message === 'Page can only be a number less than 1000.') {
+      return fail(res, 400, err.message);
+    } else {
+      return fail(res, 500, err.message);
+    }
   }
 };
 
@@ -245,6 +306,9 @@ module.exports = {
   boardEditByPostId,
   boardDeleteByPostId,
   boardRecommand,
+  boardCommentPost,
+  boardCommentDelete,
+  boardCommentMore,
   postAuthCheck,
   boardRecommandCheck,
   postView,
