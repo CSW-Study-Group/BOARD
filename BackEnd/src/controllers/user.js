@@ -146,6 +146,13 @@ const editProfile = async (req, res) => {
   }
 };
 
+/**
+ * 사용자의 id로 오늘 출석 했는지를 조회합니다.
+ *  @param {number} id
+ * @returns {object} { code: number, message: string }
+ * 출석했다면 400을 반환
+ * 출석하지 않았다면 출석 체크를 하고 200반환
+ */
 const attendanceCheck = async (req, res) => {
   let user_id = req.decoded.id;
   const today = new Date().toISOString().slice(0, 10);
@@ -164,6 +171,10 @@ const attendanceCheck = async (req, res) => {
   }
 };
 
+/**
+ * 사용자의 id로 출석 기록을 조회합니다.
+ * @returns {object} { code: number, message: string, data: array }
+ */
 const getAttendance = async (req, res) => {
   try {
     const user_id = req.decoded.id;
@@ -176,12 +187,12 @@ const getAttendance = async (req, res) => {
 
     const attendanceDates = await user.findAttendanceDate(user_id, startDate, endDate);
 
-    const attendanceDays = attendanceDates.map((attendance) => {
+    const data = attendanceDates.map((attendance) => {
       const date = new Date(attendance.attendanceDate);
       return date.getDate();
     });
 
-    return success(res, 200, 'No message.', attendanceDays);
+    return success(res, 200, 'No message.', data);
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -208,6 +219,9 @@ const viewProfile = (req, res) => {
   res.render('user/profile');
 };
 
+/**
+ * 출석 페이지를 렌더링한다.
+ */
 const viewAttend = (req, res) => {
   res.render('user/attendance');
 };
