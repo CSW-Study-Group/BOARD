@@ -66,8 +66,10 @@ router.get('/token/refresh', issuanceToken);
 router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
+router.get('/attendance/output', ctrl.viewAttend);
 
 // attendance
-router.post('/attend', auth, ctrl.attendCheck);
+router.post('/attendance', auth, ctrl.attendanceCheck);
+router.get('/attendance', auth, ctrl.getAttendance);
 
 module.exports = router;

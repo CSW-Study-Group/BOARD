@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('../partials/head') %>
+    <link rel="stylesheet" href="/css/calendar.css">
+</head>
+
+<body>
+    <%- include('../partials/nav') %>
+
+    <div class="container mb-3">
+
+        <h3 class="contentBoxTop"><b>Attendance</b></h3>
+
+    </div>
+    <script src="/js/user/attendance.js" defer></script>
+</body>
+
+<body>
+  <div class="calendar-container">
+    <div class="month"></div>
+    <table id="calendar">
+      <thead>
+        <tr>
+          <th>일</th>
+          <th>월</th>
+          <th>화</th>
+          <th>수</th>
+          <th>목</th>
+          <th>금</th>
+          <th>토</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+    <script>
+      const data = JSON.parse(localStorage.getItem('attendanceDays'));
+      function generateCalendar(data) {
+        const calendarBody = document.querySelector("#calendar tbody");
+        calendarBody.innerHTML = "";
+  
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+  
+        let dateCount = 1;
+  
+        for (let i = 0; i < 5; i++) {
+          const row = document.createElement("tr");
+          
+          for (let j = 0; j < 7; j++) {
+            if (i === 0 && j < firstDay) {
+              const cell = document.createElement("td");
+              row.appendChild(cell);
+            } else if (dateCount > lastDate) {
+              const cell = document.createElement("td");
+              row.appendChild(cell);
+            } else {
+              const cell = document.createElement("td");
+              cell.textContent = dateCount;
+
+              for (let k=0; k<data.length; k++){
+                if (dateCount == data[k]) {
+                cell.classList.add("checked");
+                break;
+                }
+              }
+              
+  
+              row.appendChild(cell);
+              dateCount++;
+            }
+          }
+          calendarBody.appendChild(row);
+        }
+  
+        const monthText = document.querySelector(".month");
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        monthText.textContent = monthNames[month];
+      }
+  
+      generateCalendar(data);
+    </script>
+
+    <div class="form-row">
+        <div class="form-group col-9">
+            <form>
+                <button style="margin: 30px 5px; float: right;" class="btn btn-secondary" id="attend_btn" type="button">출석체크</button>
+            </form>
+        </div>
+    </div>
+  </body>
+
+</html>

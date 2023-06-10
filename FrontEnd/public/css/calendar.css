@@ -1,0 +1,34 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  td {
+    cursor: pointer;
+  }
+
+  td.checked {
+    background-color: #baffb8;
+  }
+
+  .month {
+    font-size: 36px;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .calendar-container {
+  margin: 0 auto;
+  width: 70%;
+  }

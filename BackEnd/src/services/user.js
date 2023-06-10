@@ -1,6 +1,6 @@
 'use strict';
 
-const { User } = require('../utils/connect');
+const { User, Attendance } = require('../utils/connect');
 const { Op } = require('sequelize');
 
 const { accessToken, refreshToken } = require('../functions/signJWT');
@@ -157,6 +157,28 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
   });
 };
 
+const findAttendance = async (user_id, today) => {
+  return await Attendance.findOne({
+    where: { User_id: user_id, attendanceDate: today },
+  });
+};
+
+const createAttendance = async (user_id, today) => {
+  await Attendance.create({ user_id: user_id, attendanceDate: today });
+};
+
+const findAttendanceDate = async (user_id, startDate, endDate) => {
+  return await Attendance.findAll({
+    where: {
+      user_id: user_id,
+      attendanceDate: {
+        [Op.between]: [startDate, endDate],
+      },
+    },
+    attributes: ['attendanceDate'],
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserById,
@@ -164,4 +186,7 @@ module.exports = {
   verifyLogin,
   verifyRegister,
   updateUserInfo,
+  findAttendance,
+  createAttendance,
+  findAttendanceDate,
 };

@@ -1,10 +1,9 @@
 'use strict';
 
-const { Attendance } = require('../utils/connect');
-
 const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
+
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
@@ -147,6 +146,47 @@ const editProfile = async (req, res) => {
   }
 };
 
+const attendanceCheck = async (req, res) => {
+  let user_id = req.decoded.id;
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    const attendance = await user.findAttendance(user_id, today);
+
+    if (attendance) {
+      return fail(res, 400, '오늘은 이미 출석체크를 하셨습니다.');
+    }
+
+    await user.createAttendance(user_id, today);
+    return success(res, 200, '출석이 완료되었습니다.');
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+const getAttendance = async (req, res) => {
+  try {
+    const user_id = req.decoded.id;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
+    const startDate = new Date(year, month - 1, 1).toISOString().slice(0, 10);
+    const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
+
+    const attendanceDates = await user.findAttendanceDate(user_id, startDate, endDate);
+
+    const attendanceDays = attendanceDates.map((attendance) => {
+      const date = new Date(attendance.attendanceDate);
+      return date.getDate();
+    });
+
+    return success(res, 200, 'No message.', attendanceDays);
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
 /**
  * 로그인 페이지를 렌더링한다.
  */
@@ -168,24 +208,8 @@ const viewProfile = (req, res) => {
   res.render('user/profile');
 };
 
-const attendCheck = async (req, res) => {
-  let user_id = req.decoded.id;
-  const today = new Date().toISOString().slice(0, 10);
-
-  try {
-    const attendance = await Attendance.findOne({
-      where: { User_id: user_id, attendanceDate: today },
-    });
-
-    if (attendance) {
-      return fail(res, 400, '오늘은 이미 출석체크를 하셨습니다.');
-    }
-
-    await Attendance.create({ user_id: user_id, attendanceDate: today });
-    return success(res, 200, '출석이 완료되었습니다.');
-  } catch (err) {
-    return fail(res, 500, err.message);
-  }
+const viewAttend = (req, res) => {
+  res.render('user/attendance');
 };
 
 module.exports = {
@@ -193,8 +217,10 @@ module.exports = {
   postRegister,
   getProfile,
   editProfile,
+  attendanceCheck,
+  getAttendance,
   viewLogin,
   viewRegister,
   viewProfile,
-  attendCheck,
+  viewAttend,
 };
