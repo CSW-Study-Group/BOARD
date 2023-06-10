@@ -20,8 +20,11 @@ const findUserByEmail = async (email) => {
  * @param {number} id
  * @returns {object} { DB data }
  */
-const findUserById = async (id) => {
-  return await User.findOne({ where: { id: id } });
+const findUserProfileById = async (id) => {
+  return await User.findOne({
+    where: { id: id },
+    attributes: ['profile', 'email', 'user_name'],
+  });
 };
 
 /**
@@ -181,7 +184,7 @@ const findAttendanceDate = async (user_id, startDate, endDate) => {
 
 module.exports = {
   findUserByEmail,
-  findUserById,
+  findUserProfileById,
   createUser,
   verifyLogin,
   verifyRegister,

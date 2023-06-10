@@ -87,7 +87,7 @@ const postRegister = async (req, res) => {
  */
 const getProfile = async (req, res) => {
   try {
-    user.findUserById(req.decoded.id).then((data) => {
+    user.findUserProfileById(req.decoded.id).then((data) => {
       if (!data) {
         throw new Error('Can not find profile.');
       }
