@@ -2,6 +2,7 @@
 
 const { sequelize, User } = require('../utils/connect');
 const { postLogin, postRegister, getProfile, editProfile } = require('../controllers/user');
+const { chalk } = require('../../loaders/module');
 
 /**
  * * 로그인 테스트
@@ -29,7 +30,7 @@ describe('postLogin', () => {
     jest.clearAllMocks();
   });
 
-  test('should return 200 with access_token and refresh_token if login is successful', async () => {
+  test(`should return ${chalk.green(200)} with access_token and refresh_token if ${chalk.blue(`login is successful`)}`, async () => {
     await postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
@@ -43,23 +44,23 @@ describe('postLogin', () => {
     });
   });
 
-  test('should return 405 if email is incorrect', async () => {
+  test(`should return ${chalk.yellow(400)} if ${chalk.blue(`email is incorrect`)}`, async () => {
     const error = new Error('Unauthorized email.');
     req.body.email = 'test_user123@example.com';
 
     await postLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 
-  test('should return 405 if password is incorrect', async () => {
+  test(`should return ${chalk.yellow(400)} if ${chalk.blue(`password is incorrect`)}`, async () => {
     const error = new Error('Incorrect password.');
     req.body.password = 'password123';
 
     await postLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 });
@@ -95,14 +96,14 @@ describe('postRegister', () => {
     jest.clearAllMocks();
   });
 
-  it('should register a new user and return status 200 if verification is successful', async () => {
+  it(`should register a new user and return status ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
     await postRegister(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ code: 200, message: "Register success.", data: "No data." });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ code: 201, message: "Register success.", data: "No data." });
   });
 
-  it('should return status 409 and error message if username already exists', async () => {
+  it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`username already exists`)}`, async () => {
     req.body.user_name = 'test_user';
 
     await postRegister(req, res);
@@ -114,7 +115,7 @@ describe('postRegister', () => {
     });
   });
 
-  it('should return status 409 and error message if email already exists', async () => {
+  it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`email already exists`)}`, async () => {
     req.body.email = 'test_user@example.com';
 
     await postRegister(req, res);
@@ -126,36 +127,36 @@ describe('postRegister', () => {
     });
   });
 
-  it('should return status 405 and error message if username field is missing', async () => {
+  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`username field is missing`)}`, async () => {
     req.body.user_name = '';
 
     await postRegister(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       detail: "No detail.",
       message: 'Please input username.',
     });
   });
 
-  it('should return status 405 and error message if id field is missing', async () => {
+  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`id field is missing`)}`, async () => {
     req.body.email = '';
 
     await postRegister(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       detail: "No detail.",
       message: 'Please input id.',
     });
   });
 
-  it('should return status 405 and error message if password field is missing', async () => {
+  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`password field is missing`)}`, async () => {
     req.body.password = '';
 
     await postRegister(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       detail: "No detail.",
       message: 'Please input password.',
@@ -187,7 +188,7 @@ describe('getProfile', () => {
     jest.clearAllMocks();
   });
 
-  it('should return the user profile if found', async () => {
+  it(`should return status ${chalk.green(200)} if ${chalk.blue(`user profile found`)}`, async () => {
     await getProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
@@ -204,12 +205,12 @@ describe('getProfile', () => {
     );
   });
 
-  it('should return status 400 if profile is not found', async () => {
+  it(`should return status ${chalk.yellow(404)} if ${chalk.blue(`profile is not found`)}`, async () => {
     req.decoded.id = '100';
 
     await getProfile(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         detail: "No detail.",

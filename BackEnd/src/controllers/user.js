@@ -27,7 +27,7 @@ const postLogin = async (req, res) => {
     switch (err.message) {
       case 'Unauthorized email.':
       case 'Incorrect password.':
-        code = 405;
+        code = 400;
         break;
       default:
         code = 500;
@@ -55,7 +55,7 @@ const postRegister = async (req, res) => {
     await user.verifyRegister(email, password, user_name).then(async (result) => {
       if (result) {
         user.createUser(email, password, user_name);
-        return success(res, 200, 'Register success.');
+        return success(res, 201, 'Register success.');
       } else {
         throw new Error('Services error.');
       }
@@ -70,7 +70,7 @@ const postRegister = async (req, res) => {
       case 'Please input username.':
       case 'Please input id.':
       case 'Please input password.':
-        code = 405;
+        code = 400;
         break;
       default:
         code = 500;
@@ -96,7 +96,7 @@ const getProfile = async (req, res) => {
     let code;
     switch (err.message) {
       case 'Can not find profile.':
-        code = 400;
+        code = 404;
         break;
       default:
         code = 500;
