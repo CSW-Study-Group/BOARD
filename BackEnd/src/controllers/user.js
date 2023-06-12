@@ -27,7 +27,7 @@ const postLogin = async (req, res) => {
     switch (err.message) {
       case 'Unauthorized email.':
       case 'Incorrect password.':
-        code = 400;
+        code = 401;
         break;
       default:
         code = 500;

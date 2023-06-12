@@ -44,23 +44,23 @@ describe('postLogin', () => {
     });
   });
 
-  test(`should return ${chalk.yellow(400)} if ${chalk.blue(`email is incorrect`)}`, async () => {
+  test(`should return ${chalk.yellow(401)} if ${chalk.blue(`email is incorrect`)}`, async () => {
     const error = new Error('Unauthorized email.');
     req.body.email = 'test_user123@example.com';
 
     await postLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 
-  test(`should return ${chalk.yellow(400)} if ${chalk.blue(`password is incorrect`)}`, async () => {
+  test(`should return ${chalk.yellow(401)} if ${chalk.blue(`password is incorrect`)}`, async () => {
     const error = new Error('Incorrect password.');
     req.body.password = 'password123';
 
     await postLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
   });
 });
