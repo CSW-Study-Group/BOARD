@@ -9,7 +9,10 @@ const config = require('config');
 
 const methodOverride = require('method-override');
 
-const sentry = require('@sentry/node');
+const sentry = require('@sentry/node'); // monitoring
+
+// etc
+const chalk = require('chalk');
 
 module.exports = {
   sequelize,
@@ -17,5 +20,6 @@ module.exports = {
   logger,
   config,
   methodOverride,
-  sentry
+  sentry,
+  chalk
 };

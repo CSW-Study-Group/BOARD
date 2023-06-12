@@ -1,7 +1,7 @@
 'use strict';
 
 const { app, express, bodyParser } = require('./loaders/express');
-const { sequelize, morgan, logger, config, methodOverride, sentry } = require('./loaders/module');
+const { sequelize, morgan, logger, config, methodOverride, sentry, chalk } = require('./loaders/module');
 
 // 웹 세팅
 app.use(express.static('../FrontEnd/public'));
@@ -45,7 +45,7 @@ app.use('/', api_router);
 
 // 연결
 app.listen(config.get('server.port'), () => {
-  console.log(`Server Running On ${config.get('server.port')} Port!`);
+  console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port!`));
 });
 
 sequelize
