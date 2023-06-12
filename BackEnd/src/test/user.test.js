@@ -1,7 +1,12 @@
 'use strict';
 
-const { sequelize, User } = require('../utils/connect');
+const request = require('supertest');
+const { app } = require('./serverTest');
+const config = require('config');
+
+const { User } = require('../utils/connect');
 const { postLogin, postRegister, getProfile, editProfile } = require('../controllers/user');
+
 const { chalk } = require('../../loaders/module');
 
 /**
@@ -89,14 +94,14 @@ describe('postRegister', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-    await User.destroy({ where: { email: 'test_register@example.com' } });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
   });
 
   it(`should register a new user and return status ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
+    await User.destroy({ where: { email: 'test_register@example.com' } });
     await postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
@@ -220,55 +225,105 @@ describe('getProfile', () => {
   });
 });
 
-// describe('editProfile', () => {
-//   let transaction;
-//   let req, res;
+/**
+ * * 프로필 편집 테스트
+ */
+describe('editProfile', () => {
+  let req, res, token, server;
 
-//   beforeEach(async () => {
-//     req = {
-//       body: {
-//         user_name: 'test_profile',
-//         email: 'test_profile@example.com',
-//       },
-//       decoded: {
-//         id: '2',
-//       },
-//       file: {
-//         fieldname: 'profileImage',
-//         originalname: 'test_image.jpg',
-//         mimetype: 'image/jpeg',
-//         buffer: Buffer.from('...', 'base64'),
-//       },
-//     };
-//     res = {
-//       status: jest.fn().mockReturnThis(),
-//       json: jest.fn(),
-//     };
-//     transaction = await sequelize.transaction();
-//   });
+  beforeAll(async () => {
+    server = app.listen(config.get('server.port'), () => {
+      console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port!`));
+    });
 
-//   afterEach(async () => {
-//     jest.clearAllMocks();
-//     await transaction.rollback();
-//   });
+    // 로그인하여 토큰 발급
+    const res = await request(app)
+      .post('/user/login')
+      .send({ email: 'test_profile@example.com', password: '123' });
+    token = res.body.data.access_token;
+  });
 
-//   it('should edit profile successfully', async () => {
-//     req.body.user_name = 'test_profile123';
+  afterAll((done) => {
+    server.close(done);
+  });
 
-//     await editProfile(req, res);
+  beforeEach(async () => {
+    req = {
+      body: {
+        user_name: 'test_profile',
+        email: 'test_profile@example.com',
+      },
+      decoded: {
+        id: '2',
+      },
+      file: {
+        fieldname: 'profileImage',
+        originalname: 'test_image.jpg',
+        mimetype: 'image/jpeg',
+        buffer: Buffer.from('...', 'base64'),
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
 
-//     expect(res.status).toHaveBeenCalledWith(200);
-//     expect(res.json).toHaveBeenCalledWith(
-//       expect.objectContaining({
-//         code: 200,
-//         message: 'Profile Edit Success!',
-//         data: expect.objectContaining({
-//           id: 2,
-//           user_name: 'test_profile123',
-//           email: 'test_profile@example.com',
-//           profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
-//         }),
-//       }),
-//     );
-//   });
-// });
+  afterEach(async () => {
+    await User.update({ user_name: 'test_profile', email: 'test_profile@example.com' }, { where: { id: 2 }});
+    jest.clearAllMocks();
+  });
+
+  it(`should return status ${chalk.green(200)} if ${chalk.blue(`edit profile successful`)}`, async () => {
+    req.body.user_name = 'test_profile123';
+    req.body.email = 'test_profile123@example.com'
+
+    await editProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'Profile edit success.',
+        data: expect.objectContaining({
+          id: 2,
+          user_name: 'test_profile123',
+          email: 'test_profile123@example.com',
+          profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
+        }),
+      }),
+    );
+  });
+
+  it(`should return ${chalk.yellow(400)} if ${chalk.blue('profile image is not an image file')}`, async () => {
+    req.file.mimetype = 'mp4/*';
+
+    await editProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: "No detail.",
+      message: 'Profile type must be only image.',
+    });
+  });
+
+  it(`should return ${chalk.yellow(409)} if ${chalk.blue('username or email is already in use')}`, async () => {
+    // 이미 사용 중인 username으로 요청
+    const res1 = await request(app)
+      .patch('/user/profile')
+      .set('authorization', `${token}`)
+      .send({ user_name: 'test_user', email: 'test_user123@example.com' });
+
+    expect(res1.statusCode).toEqual(409);
+    expect(res1.body.message).toEqual('The username is already in use.');
+
+    // 이미 사용 중인 email로 요청
+    const res2 = await request(app)
+      .patch('/user/profile')
+      .set('authorization', `${token}`)
+      .send({ user_name: 'test_user123', email: 'test_user@example.com' });
+
+    expect(res2.statusCode).toEqual(409);
+    expect(res2.body.message).toEqual('The email is already in use.');
+  });
+});

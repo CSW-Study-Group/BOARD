@@ -123,7 +123,7 @@ const editProfile = async (req, res) => {
     let result = await user.updateUserInfo(user_id, email, user_name, req.file);
     if (result.message === 'Profile no change.') {
       data = result.user;
-    } else if (result.message === 'Profile Edit Success!') {
+    } else if (result.message === 'Profile edit success.') {
       data = result.data;
     }
     return success(res, 200, result.message, data);

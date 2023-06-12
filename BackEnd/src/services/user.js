@@ -151,7 +151,7 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
     return User.findOne({
       where: { id: user_id },
     }).then((data) => {
-      message = 'Profile Edit Success!';
+      message = 'Profile edit success.';
       return { message, data };
     });
   });
