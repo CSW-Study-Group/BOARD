@@ -226,6 +226,10 @@ describe('getProfile', () => {
 
 /**
  * * 프로필 편집 테스트
+ * 1. 프로필 편집 성공
+ * 2. 프로필 편집 성공 (변경 없음)
+ * 3. 프로필 편집 실패 (파일 형식 오류)
+ * 4. 프로필 편집 실패 (중복 유저 이름 & 이메일)
  */
 describe('editProfile', () => {
   let req, res, token, server;
@@ -288,6 +292,26 @@ describe('editProfile', () => {
           id: 2,
           user_name: 'test_profile123',
           email: 'test_profile123@example.com',
+          profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
+        }),
+      }),
+    );
+  });
+
+  it(`should return status ${chalk.green(200)} if ${chalk.blue(`profile is not changed`)}`, async () => {
+    delete req.file;
+
+    await editProfile(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'Profile no change.',
+        data: expect.objectContaining({
+          id: 2,
+          user_name: 'test_profile',
+          email: 'test_profile@example.com',
           profile: 'https://sonb-test-bucket.s3.ap-northeast-2.amazonaws.com/1691669898025364.png',
         }),
       }),
