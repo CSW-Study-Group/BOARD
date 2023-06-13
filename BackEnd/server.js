@@ -43,12 +43,15 @@ app.use((req, res, next) => {
 
 app.use('/', api_router);
 
-// 연결
-app.listen(config.get('server.port'), () => {
-  console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port!`));
-});
+if (config.get('server.status') !== 'test') {
+  app.listen(config.get('server.port'), () => {
+    console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port.`));
+  });
+}
 
 sequelize
   .sync({ force: false })
-  .then(() => { console.log('Success Connecting DB!'); })
+  .then(() => { console.log(chalk.blue('Success Connecting DB.')); })
   .catch((err) => { console.error(err); });
+
+module.exports = { app };

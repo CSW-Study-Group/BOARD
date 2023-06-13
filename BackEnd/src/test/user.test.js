@@ -1,13 +1,12 @@
 'use strict';
 
 const request = require('supertest');
-const { app } = require('./serverTest');
-const config = require('config');
+const { app } = require('../../server');
 
 const { User } = require('../utils/connect');
 const { postLogin, postRegister, getProfile, editProfile } = require('../controllers/user');
 
-const { chalk } = require('../../loaders/module');
+const { config, chalk } = require('../../loaders/module');
 
 /**
  * * 로그인 테스트
@@ -233,7 +232,7 @@ describe('editProfile', () => {
 
   beforeAll(async () => {
     server = app.listen(config.get('server.port'), () => {
-      console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port!`));
+      console.log(chalk.blue(`Test Server Running On ${config.get('server.port')} Port.`));
     });
 
     // 로그인하여 토큰 발급
