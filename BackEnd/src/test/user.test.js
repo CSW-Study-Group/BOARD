@@ -4,7 +4,7 @@ const request = require('supertest');
 const { app } = require('../../server');
 
 const { User } = require('../utils/connect');
-const { postLogin, postRegister, getProfile, editProfile } = require('../controllers/user');
+const user = require('../controllers/user');
 
 const { config, chalk } = require('../../loaders/module');
 
@@ -35,7 +35,7 @@ describe('postLogin', () => {
   });
 
   test(`should return ${chalk.green(200)} with access_token and refresh_token if ${chalk.blue(`login is successful`)}`, async () => {
-    await postLogin(req, res);
+    await user.postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -52,7 +52,7 @@ describe('postLogin', () => {
     const error = new Error('Unauthorized email.');
     req.body.email = 'test_user123@example.com';
 
-    await postLogin(req, res);
+    await user.postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
@@ -62,7 +62,7 @@ describe('postLogin', () => {
     const error = new Error('Incorrect password.');
     req.body.password = 'password123';
 
-    await postLogin(req, res);
+    await user.postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: error.message, detail: 'No detail.' });
@@ -101,7 +101,7 @@ describe('postRegister', () => {
 
   it(`should register a new user and return status ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
     await User.destroy({ where: { email: 'test_register@example.com' } });
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({ code: 201, message: "Register success.", data: "No data." });
@@ -110,7 +110,7 @@ describe('postRegister', () => {
   it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`username already exists`)}`, async () => {
     req.body.user_name = 'test_user';
 
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
@@ -122,7 +122,7 @@ describe('postRegister', () => {
   it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`email already exists`)}`, async () => {
     req.body.email = 'test_user@example.com';
 
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
@@ -134,7 +134,7 @@ describe('postRegister', () => {
   it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`username field is missing`)}`, async () => {
     req.body.user_name = '';
 
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -146,7 +146,7 @@ describe('postRegister', () => {
   it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`id field is missing`)}`, async () => {
     req.body.email = '';
 
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -158,7 +158,7 @@ describe('postRegister', () => {
   it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`password field is missing`)}`, async () => {
     req.body.password = '';
 
-    await postRegister(req, res);
+    await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -193,7 +193,7 @@ describe('getProfile', () => {
   });
 
   it(`should return status ${chalk.green(200)} if ${chalk.blue(`user profile found`)}`, async () => {
-    await getProfile(req, res);
+    await user.getProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -212,7 +212,7 @@ describe('getProfile', () => {
   it(`should return status ${chalk.yellow(404)} if ${chalk.blue(`profile is not found`)}`, async () => {
     req.decoded.id = '100';
 
-    await getProfile(req, res);
+    await user.getProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -281,7 +281,7 @@ describe('editProfile', () => {
     req.body.user_name = 'test_profile123';
     req.body.email = 'test_profile123@example.com'
 
-    await editProfile(req, res);
+    await user.updateProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -301,7 +301,7 @@ describe('editProfile', () => {
   it(`should return status ${chalk.green(200)} if ${chalk.blue(`profile is not changed`)}`, async () => {
     delete req.file;
 
-    await editProfile(req, res);
+    await user.updateProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -321,7 +321,7 @@ describe('editProfile', () => {
   it(`should return ${chalk.yellow(400)} if ${chalk.blue('profile image is not an image file')}`, async () => {
     req.file.mimetype = 'mp4/*';
 
-    await editProfile(req, res);
+    await user.updateProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({

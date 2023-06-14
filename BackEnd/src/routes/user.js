@@ -52,7 +52,7 @@ router.patch(
       .withMessage('Email must be shorter than 31 characters.'),
     validator,
   ],
-  ctrl.editProfile,
+  ctrl.updateProfile,
 );
 
 // token refresh
