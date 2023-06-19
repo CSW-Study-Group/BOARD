@@ -242,7 +242,7 @@ describe('editProfile', () => {
     // 로그인하여 토큰 발급
     const res = await request(app)
       .post('/user/login')
-      .send({ email: 'test_profile@example.com', password: '123' });
+      .send({ email: 'test_profile@example.com', password: 'password' });
     token = res.body.data.access_token;
   });
 
