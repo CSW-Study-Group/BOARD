@@ -20,7 +20,7 @@ sentry.init({ // 모든 요청 트래킹
     new sentry.Integrations.Express({ app }),
   ],
   tracesSampleRate: 1.0,
-  enabled: config.get('server.status') !== 'production' ? false : true,
+  enabled: config.get('server.status') === 'production' ? true : false,
 });
 
 app.use(sentry.Handlers.requestHandler()); // 요청정보 캡처

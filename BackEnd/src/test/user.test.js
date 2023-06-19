@@ -6,7 +6,7 @@ const { app } = require('../../server');
 const { User } = require('../utils/connect');
 const user = require('../controllers/user');
 
-const { config, chalk } = require('../../loaders/module');
+const { path, config, chalk } = require('../../loaders/module');
 
 /**
  * * 로그인 테스트
@@ -99,7 +99,7 @@ describe('postRegister', () => {
     jest.clearAllMocks();
   });
 
-  it(`should register a new user and return status ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
+  it(`should register a new user and return ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
     await User.destroy({ where: { email: 'test_register@example.com' } });
     await user.postRegister(req, res);
 
@@ -107,7 +107,7 @@ describe('postRegister', () => {
     expect(res.json).toHaveBeenCalledWith({ code: 201, message: "Register success.", data: "No data." });
   });
 
-  it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`username already exists`)}`, async () => {
+  it(`should return ${chalk.yellow(409)} and error message if ${chalk.blue(`username already exists`)}`, async () => {
     req.body.user_name = 'test_user';
 
     await user.postRegister(req, res);
@@ -119,7 +119,7 @@ describe('postRegister', () => {
     });
   });
 
-  it(`should return status ${chalk.yellow(409)} and error message if ${chalk.blue(`email already exists`)}`, async () => {
+  it(`should return ${chalk.yellow(409)} and error message if ${chalk.blue(`email already exists`)}`, async () => {
     req.body.email = 'test_user@example.com';
 
     await user.postRegister(req, res);
@@ -131,7 +131,7 @@ describe('postRegister', () => {
     });
   });
 
-  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`username field is missing`)}`, async () => {
+  it(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(`username field is missing`)}`, async () => {
     req.body.user_name = '';
 
     await user.postRegister(req, res);
@@ -143,7 +143,7 @@ describe('postRegister', () => {
     });
   });
 
-  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`id field is missing`)}`, async () => {
+  it(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(`id field is missing`)}`, async () => {
     req.body.email = '';
 
     await user.postRegister(req, res);
@@ -155,7 +155,7 @@ describe('postRegister', () => {
     });
   });
 
-  it(`should return status ${chalk.yellow(400)} and error message if ${chalk.blue(`password field is missing`)}`, async () => {
+  it(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(`password field is missing`)}`, async () => {
     req.body.password = '';
 
     await user.postRegister(req, res);
@@ -192,7 +192,7 @@ describe('getProfile', () => {
     jest.clearAllMocks();
   });
 
-  it(`should return status ${chalk.green(200)} if ${chalk.blue(`user profile found`)}`, async () => {
+  it(`should return ${chalk.green(200)} if ${chalk.blue(`user profile found`)}`, async () => {
     await user.getProfile(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
@@ -209,7 +209,7 @@ describe('getProfile', () => {
     );
   });
 
-  it(`should return status ${chalk.yellow(404)} if ${chalk.blue(`profile is not found`)}`, async () => {
+  it(`should return ${chalk.yellow(404)} if ${chalk.blue(`profile is not found`)}`, async () => {
     req.decoded.id = '100';
 
     await user.getProfile(req, res);
@@ -277,7 +277,7 @@ describe('editProfile', () => {
     jest.clearAllMocks();
   });
 
-  it(`should return status ${chalk.green(200)} if ${chalk.blue(`edit profile successful`)}`, async () => {
+  it(`should return ${chalk.green(200)} if ${chalk.blue(`edit profile successful`)}`, async () => {
     req.body.user_name = 'test_profile123';
     req.body.email = 'test_profile123@example.com'
 
@@ -298,7 +298,7 @@ describe('editProfile', () => {
     );
   });
 
-  it(`should return status ${chalk.green(200)} if ${chalk.blue(`profile is not changed`)}`, async () => {
+  it(`should return ${chalk.green(200)} if ${chalk.blue(`profile is not changed`)}`, async () => {
     delete req.file;
 
     await user.updateProfile(req, res);
@@ -348,5 +348,42 @@ describe('editProfile', () => {
 
     expect(res2.statusCode).toEqual(409);
     expect(res2.body.message).toEqual('The email is already in use.');
+  });
+});
+
+/**
+ * * 프로필 업로드 테스트
+ * 1. 프로필 업로드 실패 (파일 사이즈 초과)
+ */
+describe('imgUpload', () => {
+  let token, server, imagePath;
+
+  beforeAll(async () => {
+    server = app.listen(config.get('server.port'), () => {
+      console.log(chalk.blue(`Test Server Running On ${config.get('server.port')} Port.`));
+    });
+
+    imagePath = path.join(__dirname, 'fixtures', 'large-image.jpg');
+
+    // 로그인하여 토큰 발급
+    const res = await request(app)
+      .post('/user/login')
+      .send({ email: 'test_user@example.com', password: 'password' });
+    token = res.body.data.access_token;
+  });
+
+  afterAll((done) => {
+    server.close(done);
+  });
+
+  test(`should return ${chalk.yellow(413)} if ${chalk.blue('file size exceeds 10MB')}`, async () => {
+    const res = await request(app)
+      .patch('/user/profile')
+      .set('authorization', `${token}`)
+      .attach('image', imagePath);
+
+    expect(res.statusCode).toEqual(413);
+    expect(res.body).toHaveProperty('code', 413);
+    expect(res.body).toHaveProperty('message', 'File size exceeded. please check the file size and try again (not exceeding 10MB)');
   });
 });
