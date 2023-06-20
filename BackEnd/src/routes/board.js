@@ -1,6 +1,6 @@
 'use strict';
 
-const { auth } = require('../middleware/verifyJWT');
+const { auth, boardAuth } = require('../middleware/verifyJWT');
 
 const express = require('express');
 const router = express.Router();
@@ -24,17 +24,17 @@ router.post(
 );
 
 router.get('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardGetByPostId);
-router.delete('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardDeleteByPostId);
+router.delete('/:id', boardAuth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardDeleteByPostId);
 router.patch(
   '/:id',
-  auth,
+  boardAuth,
   [
     check('id').isInt().withMessage('Post ID must be a number.'),
     check('title').notEmpty().withMessage('Title is required.'),
     check('content').notEmpty().withMessage('Content is required.'),
     validator,
   ],
-  ctrl.boardEditByPostId,
+  ctrl.boardUpdateByPostId,
 );
 
 router.post('/:id/recommand', auth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardRecommand);
@@ -50,6 +50,6 @@ router.get('/:id/recommand', auth, [check('id').isInt().withMessage('Post ID mus
 
 // rendering page
 router.get('/post/new', ctrl.postView);
-router.get('/:id/edit', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.editViewByPostId);
+router.get('/:id/edit', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.updateViewByPostId);
 
 module.exports = router;

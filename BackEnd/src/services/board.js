@@ -66,6 +66,8 @@ const searchByPostId = async (post_id) => {
 
 // 페이징 처리되는 댓글 limit개씩 조회
 const searchCommentByPostId = async (post_id, limit, page) => {
+  if(page >= 1000) throw new Error('Page can only be a number less than 1000.');
+
   let comment = await Comment.findAndCountAll({
     include: [
       {
@@ -92,7 +94,7 @@ const searchCommentByPostId = async (post_id, limit, page) => {
 /**
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
-const editPost = async (title, content, post_id) => {
+const updatePost = async (title, content, post_id) => {
   return await Post.update(
     {
       title: title,
@@ -163,13 +165,6 @@ const recommandCheckBoard = async (user_id, content_id) => {
 };
 
 /**
- * post_id에 해당하는 글을 찾아서 리턴한다.
- */
-const editView = async (post_id) => {
-  return await Post.findOne({ where: { id: post_id } });
-};
-
-/**
  * @returns 게시글의 총 개수를 리턴한다.
  */
 const countPost = async () => {
@@ -222,7 +217,7 @@ module.exports = {
   postBoard,
   searchByPostId,
   searchCommentByPostId,
-  editPost,
+  updatePost,
   deletePost,
   countPost,
   commentPost,
@@ -230,5 +225,4 @@ module.exports = {
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,
-  editView,
 };
