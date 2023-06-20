@@ -1,6 +1,6 @@
 'use strict';
 
-const { auth, boardAuth } = require('../middleware/verifyJWT');
+const { auth } = require('../middleware/verifyJWT');
 
 const express = require('express');
 const router = express.Router();
@@ -24,10 +24,10 @@ router.post(
 );
 
 router.get('/:id', [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardGetByPostId);
-router.delete('/:id', boardAuth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardDeleteByPostId);
+router.delete('/:id', auth, [check('id').isInt().withMessage('Post ID must be a number.'), validator], ctrl.boardDeleteByPostId);
 router.patch(
   '/:id',
-  boardAuth,
+  auth,
   [
     check('id').isInt().withMessage('Post ID must be a number.'),
     check('title').notEmpty().withMessage('Title is required.'),

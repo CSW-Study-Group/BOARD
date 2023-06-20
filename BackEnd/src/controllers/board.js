@@ -127,13 +127,20 @@ const boardPost = (req, res) => {
 /**
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
-const boardUpdateByPostId = (req, res) => {
+const boardUpdateByPostId = async (req, res) => {
   const { title, content } = req.body;
   const { id: post_id } = req.params;
+  const user_id = req.decoded.id;
+
   try {
-    board.updatePost(title, content, post_id).then(() => {
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      await board.updatePost(title, content, post_id);
       return success(res, 200, 'Post updated success.');
-    });
+    } else {
+      return fail(res, 403, 'You are not authorized to update this post.');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -144,9 +151,17 @@ const boardUpdateByPostId = (req, res) => {
  */
 const boardDeleteByPostId = async (req, res) => {
   const { id: post_id } = req.params;
+  const user_id = req.decoded.id;
+
   try {
-    await board.deletePost(post_id);
-    return success(res, 200, 'Post deleted success.');
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      await board.deletePost(post_id);
+      return success(res, 200, 'Post deleted success.');
+    } else {
+      return fail(res, 403, 'You are not authorized to delete this post.');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -157,10 +172,10 @@ const boardDeleteByPostId = async (req, res) => {
  */
 const boardRecommand = async (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    const result = await board.recommandBoard(user_id, content_id);
+    const result = await board.recommandBoard(user_id, post_id);
     return success(res, 200, result.message, result.data);
   } catch (err) {
     return fail(res, 500, err.message);
@@ -173,10 +188,10 @@ const boardRecommand = async (req, res) => {
 const boardCommentPost = (req, res) => {
   const { comment } = req.body;
   const user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    board.commentPost(comment, user_id, content_id).then(() => {
+    board.commentPost(comment, user_id, post_id).then(() => {
       return success(res, 200, 'Comment created success.');
     });
   } catch (err) {
@@ -224,18 +239,18 @@ const boardCommentMore = async (req, res) => {
 /**
  * 게시글 작성자인지 확인한다. (작성자일 경우, 200, 작성자가 아닐 경우, 401)
  */
-const postAuthCheck = (req, res) => {
+const postAuthCheck = async (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    board.authCheckPost(content_id).then((data) => {
-      if (user_id === data.user_id) {
-        return success(res, 200, 'authorized');
-      } else {
-        return success(res, 401, 'unauthorized');
-      }
-    });
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      return success(res, 200, 'authorized');
+    } else {
+      return success(res, 401, 'unauthorized');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -246,10 +261,10 @@ const postAuthCheck = (req, res) => {
  */
 const boardRecommandCheck = (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    board.recommandCheckBoard(user_id, content_id).then((data) => {
+    board.recommandCheckBoard(user_id, post_id).then((data) => {
       if (data !== null) {
         // 추천 O
         return success(res, 200, 'created');
