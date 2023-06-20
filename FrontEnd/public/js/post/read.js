@@ -103,6 +103,8 @@ function delete_click() {
                         })
                 } else { // 401 or 500
                     alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     location.href = "/user/login";
                 }
             })
@@ -157,6 +159,8 @@ function recommand_click() {
                         })
                 } else { // 401 or 500
                     alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     location.href = "/user/login";
                 }
             })
@@ -207,6 +211,8 @@ function create_comment_post() {
                     })
             } else { // 401 or 500
                 alert(res.message);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
                 location.href = "/user/login";
             }
         })
@@ -311,6 +317,8 @@ function delete_comment_post(comment_id) {
                     alert("Only the author of the comment can delete it.");
                 } else {
                     alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     location.href = "/user/login";
                 }
             }
