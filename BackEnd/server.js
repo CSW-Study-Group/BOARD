@@ -51,7 +51,7 @@ if (config.get('server.status') !== 'test') {
 
 sequelize
   .sync({ force: false })
-  .then(() => { console.log(chalk.blue('Success Connecting DB.')); })
+  .then(() => { config.get('server.status') !== 'test' ? console.log(chalk.blue('Success Connecting DB.')) : null })
   .catch((err) => { console.error(err); });
 
 module.exports = { app };

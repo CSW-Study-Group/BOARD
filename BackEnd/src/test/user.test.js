@@ -235,9 +235,7 @@ describe('editProfile', () => {
   let req, res, token, server;
 
   beforeAll(async () => {
-    server = app.listen(config.get('server.port'), () => {
-      console.log(chalk.blue(`Test Server Running On ${config.get('server.port')} Port.`));
-    });
+    server = app.listen(config.get('server.port'));
 
     // 로그인하여 토큰 발급
     const res = await request(app)
@@ -359,9 +357,7 @@ describe('imgUpload', () => {
   let token, server, imagePath;
 
   beforeAll(async () => {
-    server = app.listen(config.get('server.port'), () => {
-      console.log(chalk.blue(`Test Server Running On ${config.get('server.port')} Port.`));
-    });
+    server = app.listen(config.get('server.port'));
 
     imagePath = path.join(__dirname, 'fixtures', 'large-image.jpg');
 

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest --verbose --detectOpenHandles",
     "test-coverage": "jest --coverage --detectOpenHandles",
     "start": "nodemon server.js",
     "release": "standard-version"
