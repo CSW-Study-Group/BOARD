@@ -3,6 +3,7 @@
 const request = require('supertest');
 const { app } = require('../../server');
 
+const { Post } = require('../utils/connect');
 const board = require('../controllers/board');
 
 const { config, chalk } = require('../../loaders/module');
@@ -81,9 +82,47 @@ describe('getBoardByPostId', () => {
 
   test(`should return ${chalk.yellow(404)} if ${chalk.blue('post is not exists')}`, async () => {
     const res = await request(app)
-      .get(`/board/${2}`)
+      .get(`/board/${100}`)
 
     expect(res.statusCode).toEqual(404);
     expect(res.body.message).toEqual('No data.');
+  });
+});
+
+/**
+ * * 게시글 작성 테스트
+ * 1. 게시글 작성 성공
+ */
+describe('postBoard', () => {
+  let server, token;
+
+  beforeAll(async () => {
+    server = app.listen(config.get('server.port'));
+
+    const res = await request(app)
+      .post('/user/login')
+      .send({ email: 'test_profile@example.com', password: 'password' });
+    token = res.body.data.access_token;
+  });
+
+  afterEach(async () => {
+    await Post.destroy({ where: { title: 'post_test' } });
+  });
+
+  afterAll((done) => {
+    server.close(done);
+  });
+
+  test(`should return ${chalk.green(200)} if ${chalk.blue('create a new post successful')}`, async () => {
+    const title = 'post_test';
+    const content = 'test_content';
+
+    const res = await request(app)
+      .post('/board')
+      .set('authorization', token)
+      .send({ title: title, content: content });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe('Post created success.');
   });
 });

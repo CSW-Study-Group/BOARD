@@ -36,7 +36,6 @@ const postBoard = async (title, content, user_id) => {
   return await Post.create({
     title: title,
     content: content,
-    view: 0,
     user_id: user_id,
   });
 };

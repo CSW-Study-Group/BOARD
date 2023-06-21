@@ -24,6 +24,7 @@ module.exports = class Post extends Sequelize.Model {
         view: {
           type: Sequelize.INTEGER,
           allowNull: false,
+          defaultValue: 0,
         },
         recommand: {
           type: Sequelize.INTEGER,
