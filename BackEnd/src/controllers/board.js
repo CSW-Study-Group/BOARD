@@ -117,7 +117,7 @@ const boardPost = (req, res) => {
 
   try {
     board.postBoard(title, content, user_id).then(() => {
-      return success(res, 200, 'Post created success.');
+      return success(res, 201, 'Post created success.');
     });
   } catch (err) {
     return fail(res, 500, err.message);

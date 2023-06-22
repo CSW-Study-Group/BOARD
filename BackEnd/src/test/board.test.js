@@ -113,7 +113,7 @@ describe('postBoard', () => {
     server.close(done);
   });
 
-  test(`should return ${chalk.green(200)} if ${chalk.blue('create a new post successful')}`, async () => {
+  test(`should return ${chalk.green(201)} if ${chalk.blue('create a new post successful')}`, async () => {
     const title = 'post_test';
     const content = 'test_content';
 
@@ -122,7 +122,7 @@ describe('postBoard', () => {
       .set('authorization', token)
       .send({ title: title, content: content });
 
-    expect(res.statusCode).toBe(200);
+    expect(res.statusCode).toBe(201);
     expect(res.body.message).toBe('Post created success.');
   });
 });

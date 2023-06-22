@@ -25,7 +25,7 @@ function createPost() {
     })
     .then((res) => res.json())
     .then((res) => {
-        if(res.code === 200) {
+        if(res.code === 201) {
             location.href = "/board";
         } else if(res.code === 419){ // Access Token has expired.
             fetch("/user/token/refresh", {
