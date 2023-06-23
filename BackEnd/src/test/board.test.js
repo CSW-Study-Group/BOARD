@@ -126,3 +126,139 @@ describe('postBoard', () => {
     expect(res.body.message).toBe('Post created success.');
   });
 });
+
+/**
+ * * 게시글 수정 테스트
+ * 1. 게시글 수정 성공
+ * 2. 게시글 수정 실패 (게시글 작성자 id와 로그인한 유저 id가 다를 경우)
+ */
+describe('updateBoardByPostId', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: { title: 'update_title', content: 'update_content' },
+      params: { id: 1 },
+      decoded: { id: 1 },
+    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await Post.update(
+      {
+        title: 'test_title',
+        content: 'test_content',
+        updated_at: new Date(),
+      },
+      {
+        where: { id: 1 },
+      }
+    );
+  });
+
+  it(`should return ${chalk.green(200)} if ${chalk.blue('post is updated successful')}`, async () => {
+    await board.boardUpdateByPostId(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ code: 200, message: "Post updated success.", data: "No data." });
+  });
+
+  it(`should return ${chalk.yellow(403)} if ${chalk.blue('user is not authorized to update post')}`, async () => {
+    req.decoded.id = 2;
+
+    await board.boardUpdateByPostId(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: "No detail.",
+      message: 'You are not authorized to update this post.',
+    });
+  });
+});
+
+/**
+ * * 게시글 삭제 테스트
+ * 1. 게시글 삭제 성공
+ * 2. 게시글 삭제 실패 (게시글 작성자 id와 로그인한 유저 id가 다를 경우)
+ */
+describe('deleteBoardByPostId', () => {
+  let req, res, post_id;
+
+  beforeEach(() => {
+    req = {
+      params: { id: post_id },
+      decoded: { id: 1 },
+    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  beforeAll(async () => {
+    const post = await Post.create({
+      title: 'delete_title',
+      content: 'delete_content',
+      user_id: 1,
+    });
+
+    post_id = post.id;
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it(`should return ${chalk.green(200)} if ${chalk.blue('post is deleted successful')}`, async () => {
+    await board.boardDeleteByPostId(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ code: 200, message: "Post deleted success.", data: "No data." });
+  });
+
+  it(`should return ${chalk.yellow(403)} if ${chalk.blue('user is not authorized to delete post')}`, async () => {
+    req.decoded.id = 2;
+    req.params.id = 1;
+
+    await board.boardDeleteByPostId(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: "No detail.",
+      message: 'You are not authorized to delete this post.',
+    });
+  });
+});
+
+/**
+ * * 게시글 추천 테스트
+ * 1. 게시글 추천 성공 (추천 O, X)
+ */
+// describe('boardRecommand', () => {
+//   let req, res;
+
+//   beforeEach(() => {
+//     req = { decoded: { id: 1 }, params: { id: 1 } };
+//     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+//   });
+
+//   afterEach(() => {
+//     jest.clearAllMocks();
+//   });
+
+//   it('should return 200 if board is recommended successfully', async () => {
+//     await board.boardRecommand(req, res);
+
+//     expect(res.status).toHaveBeenCalledWith(200);
+//     expect(res.json).toHaveBeenCalledWith({ code: 200, message: 'create', data: { recommand: 1 } });
+//   });
+
+//   it('should return 200 if board is recommended successfully', async () => {
+//     await board.boardRecommand(req, res);
+
+//     expect(res.status).toHaveBeenCalledWith(200);
+//     expect(res.json).toHaveBeenCalledWith({ code: 200, message: 'delete', data: { recommand: 0 } });
+//   });
+// });
