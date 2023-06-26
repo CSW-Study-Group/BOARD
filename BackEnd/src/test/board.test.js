@@ -236,29 +236,45 @@ describe('deleteBoardByPostId', () => {
  * * 게시글 추천 테스트
  * 1. 게시글 추천 성공 (추천 O, X)
  */
-// describe('boardRecommand', () => {
-//   let req, res;
+describe('boardRecommand', () => {
+  let req, res;
 
-//   beforeEach(() => {
-//     req = { decoded: { id: 1 }, params: { id: 1 } };
-//     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-//   });
+  beforeEach(() => {
+    req = { decoded: { id: 1 }, params: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
 
-//   afterEach(() => {
-//     jest.clearAllMocks();
-//   });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-//   it('should return 200 if board is recommended successfully', async () => {
-//     await board.boardRecommand(req, res);
+  it(`should return ${chalk.green(200)} if ${chalk.blue('board recommend created successfully')}`, async () => {
+    await board.boardRecommand(req, res);
 
-//     expect(res.status).toHaveBeenCalledWith(200);
-//     expect(res.json).toHaveBeenCalledWith({ code: 200, message: 'create', data: { recommand: 1 } });
-//   });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'create',
+        data: expect.objectContaining({
+          recommand: 1
+        })
+      })
+    );
+  });
 
-//   it('should return 200 if board is recommended successfully', async () => {
-//     await board.boardRecommand(req, res);
+  it(`should return ${chalk.green(200)} if ${chalk.blue('board recommend deleted successfully')}`, async () => {
+    await board.boardRecommand(req, res);
 
-//     expect(res.status).toHaveBeenCalledWith(200);
-//     expect(res.json).toHaveBeenCalledWith({ code: 200, message: 'delete', data: { recommand: 0 } });
-//   });
-// });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'delete',
+        data: expect.objectContaining({
+          recommand: 0
+        })
+      })
+    );
+  });
+});
