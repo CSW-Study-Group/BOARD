@@ -185,15 +185,14 @@ const boardRecommand = async (req, res) => {
 /**
  * 유저로부터, 댓글 내용을 받아 생성한다.
  */
-const boardCommentPost = (req, res) => {
+const boardCommentPost = async (req, res) => {
   const { comment } = req.body;
   const user_id = req.decoded.id;
   let post_id = req.params.id;
 
   try {
-    board.commentPost(comment, user_id, post_id).then(() => {
-      return success(res, 200, 'Comment created success.');
-    });
+    await board.commentPost(comment, user_id, post_id);
+    return success(res, 201, 'Comment created success.');
   } catch (err) {
     return fail(res, 500, err.message);
   }

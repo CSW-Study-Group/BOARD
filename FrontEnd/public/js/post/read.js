@@ -188,7 +188,7 @@ function create_comment_post() {
     })
         .then((res) => res.json())
         .then((res) => {
-            if (res.code === 200) {
+            if (res.code === 201) {
                 alert("Create comment success.");
                 location.herf = `/board/${content_id}`
                 location.reload();

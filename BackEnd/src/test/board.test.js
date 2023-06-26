@@ -3,7 +3,7 @@
 const request = require('supertest');
 const { app } = require('../../server');
 
-const { Post } = require('../utils/connect');
+const { Post, Comment } = require('../utils/connect');
 const board = require('../controllers/board');
 
 const { config, chalk } = require('../../loaders/module');
@@ -236,7 +236,7 @@ describe('deleteBoardByPostId', () => {
  * * 게시글 추천 테스트
  * 1. 게시글 추천 성공 (추천 O, X)
  */
-describe('boardRecommand', () => {
+describe('postBoardRecommand', () => {
   let req, res;
 
   beforeEach(() => {
@@ -276,5 +276,119 @@ describe('boardRecommand', () => {
         })
       })
     );
+  });
+});
+
+/**
+ * * 게시글 댓글 생성 테스트
+ * 1. 게시글 댓글 생성 성공
+ */
+describe('postBoardComment', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { body: { comment: 'test_comment' }, decoded: { id: 1 }, params: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await Comment.destroy({
+      where: { user_id: 1, post_id: 1, comment: 'test_comment' },
+    });
+  });
+
+  it(`should return ${chalk.green(201)} if ${chalk.blue('comment is created successfully')}`, async () => {
+    await board.boardCommentPost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ code: 201, data: "No data.", message: 'Comment created success.' });
+  });
+});
+
+/**
+ * * 게시글 댓글 삭제 테스트
+ * 1. 게시글 댓글 삭제 성공
+ * 2. 게시글 댓글 삭제 실패 (댓글 작성자 id와 로그인한 유저 id가 다를 경우)
+ */
+describe('deleteBoardComment', () => {
+  let req, res, comment_id;
+
+  beforeAll(async () => {
+    comment_id = await Comment.create({
+      comment: 'test_comment',
+      user_id: 1,
+      post_id: 1,
+    });
+
+    comment_id = comment_id.id;
+  });
+
+  beforeEach(() => {
+    req = { params: { comment_id: comment_id }, decoded: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it(`should return ${chalk.green(200)} if ${chalk.blue('comment is deleted successfully')}`, async () => {
+    await board.boardCommentDelete(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ code: 200, data: 'No data.', message: 'Comment deleted success.' });
+  });
+
+  it(`should return ${chalk.yellow(401)} if ${chalk.blue('user is unauthorized')}`, async () => {
+    req.decoded.id = 2;
+
+    await board.boardCommentDelete(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ detail: 'No detail.', message: 'unauthorized' });
+  });
+});
+
+/**
+ * * 게시글 댓글 더보기 테스트
+ * 1. 게시글 댓글 더보기 성공
+ * 2. 게시글 댓글 더보기 실패 (comment_page가 1000 이상일 경우)
+ */
+describe('boardCommentMore', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { params: { id: 1, comment_page: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it(`should return ${chalk.green(200)} if ${chalk.blue('comments are brought up successfully')}`, async () => {
+    await board.boardCommentMore(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 200,
+      message: 'Bringing up comments success.',
+      data: expect.objectContaining({
+        count: expect.any(Number),
+        more: expect.any(Boolean),
+        rows: expect.any(Array),
+      })
+    });
+  });
+
+  it(`should return ${chalk.yellow(400)} if ${chalk.blue('comment_page is greater than or equal to 1000')}`, async () => {
+    await board.boardCommentMore({ params: { id: 1, comment_page: 1000 } }, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ detail: 'No detail.', message: 'Page can only be a number less than 1000.' });
   });
 });
