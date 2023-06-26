@@ -46,9 +46,6 @@ function updateProfile() {
                 img.src = res.data.profile;
                 $('input[name=username]').val(res.data.user_name);
                 $('input[name=email]').val(res.data.email);
-            } else if (res.code === 400) {
-                alert(res.message);
-                location.reload();
             } else {
                 alert(res.message);
                 location.reload();

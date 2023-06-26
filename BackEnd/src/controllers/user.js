@@ -27,7 +27,7 @@ const postLogin = async (req, res) => {
     switch (err.message) {
       case 'Unauthorized email.':
       case 'Incorrect password.':
-        code = 405;
+        code = 401;
         break;
       default:
         code = 500;
@@ -40,7 +40,7 @@ const postLogin = async (req, res) => {
 /**
  * 사용자에게, username, email, password를 입력받아 회원가입을 시도한다.
  * - username, email이 다른 사용자가 사용하고 있을 시, 409
- * - username, email, password 중 하나라도 입력되지 않았을 시, 405
+ * - username, email, password 중 하나라도 입력되지 않았을 시, 400
  *
  * @param {string} user_name 사용자 이름
  * @param {string} email 이메일
@@ -52,14 +52,11 @@ const postRegister = async (req, res) => {
   let { email, password, user_name } = req.body;
 
   try {
-    await user.verifyRegister(email, password, user_name).then((result) => {
-      if (result) {
-        user.createUser(email, password, user_name);
-        return success(res, 200, 'Register success.');
-      } else {
-        throw new Error('Services error.');
-      }
-    });
+    let result = await user.verifyRegister(email, password, user_name);
+    if (result) {
+      user.createUser(email, password, user_name);
+      return success(res, 201, 'Register success.');
+    }
   } catch (err) {
     let code;
     switch (err.message) {
@@ -70,7 +67,7 @@ const postRegister = async (req, res) => {
       case 'Please input username.':
       case 'Please input id.':
       case 'Please input password.':
-        code = 405;
+        code = 400;
         break;
       default:
         code = 500;
@@ -87,17 +84,13 @@ const postRegister = async (req, res) => {
  */
 const getProfile = async (req, res) => {
   try {
-    user.findUserById(req.decoded.id).then((data) => {
-      if (!data) {
-        throw new Error('Can not find profile.');
-      }
-      return success(res, 200, 'No message', data);
-    });
+    const data = await user.findUser('id', req.decoded.id, 0);
+    return success(res, 200, 'No message', data);
   } catch (err) {
     let code;
     switch (err.message) {
       case 'Can not find profile.':
-        code = 400;
+        code = 404;
         break;
       default:
         code = 500;
@@ -116,15 +109,15 @@ const getProfile = async (req, res) => {
  *  - username, email이 다른 사용자가 사용하고 있을 시, 409 반환
  *  - username, email 변동없을 시 편집 정상 수행
  */
-const editProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   let { user_name, email } = req.body;
   let user_id = req.decoded.id;
   let data;
   try {
-    let result = await user.updateUserInfo(user_id, email, user_name, req.file);
+    let result = await user.updateUser(user_id, email, user_name, req.file);
     if (result.message === 'Profile no change.') {
       data = result.user;
-    } else if (result.message === 'Profile Edit Success!') {
+    } else if (result.message === 'Profile edit success.') {
       data = result.data;
     }
     return success(res, 200, result.message, data);
@@ -171,7 +164,7 @@ module.exports = {
   postLogin,
   postRegister,
   getProfile,
-  editProfile,
+  updateProfile,
   viewLogin,
   viewRegister,
   viewProfile,

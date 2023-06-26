@@ -7,21 +7,29 @@ const { accessToken, refreshToken } = require('../functions/signJWT');
 const bcrypt = require('bcrypt');
 
 /**
- * email 검색 후 return
- * @param {string} email
+ * 사용자 검색 후 return
+ * @param {string} field 검색할 필드명 ('email' 또는 'id')
+ * @param {string|number} value 검색할 값
+ * @param {number} locate 함수를 사용할 위치 0 = ctrl, 1 = service
  * @returns {object} { DB data }
  */
-const findUserByEmail = async (email) => {
-  return await User.findOne({ where: { email: email } });
-};
+const findUser = async (field, value, locate = 1) => {
+  let where = {};
 
-/**
- *  id 검색 후 return
- * @param {number} id
- * @returns {object} { DB data }
- */
-const findUserById = async (id) => {
-  return await User.findOne({ where: { id: id } });
+  if (field === 'email') {
+    where = { email: value };
+  } else if (field === 'id') {
+    where = { id: value };
+  }
+
+  const user = await User.findOne({ where: where });
+  if (!user && locate === 0) {
+    throw new Error('Can not find profile.');
+  } else if (!user && locate === 1) {
+    return null
+  } else {
+    return user;
+  }
 };
 
 /**
@@ -41,6 +49,55 @@ const createUser = async (email, password, user_name) => {
 };
 
 /**
+ * 사용자에게, username, email을 입력받아 프로필을 편집합니다.
+ * @param {number} user_id
+ * @param {string} email
+ * @param {string} user_name
+ * @param {any} file
+ *
+ * @returns {Object} { message: string, user | data : DBdata }
+ */
+const updateUser = async (user_id, email, user_name, file) => {
+  const db_option = {
+    user_name,
+    email,
+    ...(file && { profile: file.location }),
+    // { profile: req.file.location } 객체가 req.file이 undefined이 아닌 경우에만 포함
+  };
+  let message = '';
+  if (file && !file.mimetype.startsWith('image/')) {
+    // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
+    throw new Error('Profile type must be only image.');
+  }
+  const user = await User.findByPk(user_id);
+  if (user_name === user.user_name && email === user.email && file === undefined) {
+    message = 'Profile no change.';
+    return { message, user };
+  }
+
+  const check_username = await User.findOne({ where: { user_name } });
+  if (check_username && check_username.user_name !== user.user_name) {
+    throw new Error('The username is already in use.');
+  }
+
+  const check_email = await findUser('email', email);
+  if (check_email && check_email.email !== user.email) {
+    throw new Error('The email is already in use.');
+  }
+
+  return User.update(db_option, {
+    where: { id: user_id },
+  }).then(() => {
+    return User.findOne({
+      where: { id: user_id },
+    }).then((data) => {
+      message = 'Profile edit success.';
+      return { message, data };
+    });
+  });
+};
+
+/**
  * email과 password를 받아 DB와 대조
  * @param {string} email
  * @param {string} password
@@ -48,7 +105,7 @@ const createUser = async (email, password, user_name) => {
  * @returns {object} { access_token: string, refresh_token: string }
  */
 const verifyLogin = async (email, password) => {
-  return await findUserByEmail(email) // email 검색
+  return await findUser('email', email) // email 검색
     .then(async (user) => {
       if (user === null) {
         // email검색 실패(계정 없음)
@@ -108,60 +165,10 @@ const verifyRegister = async (email, password, user_name) => {
   });
 };
 
-/**
- * 사용자에게, username, email을 입력받아 프로필을 편집합니다.
- * @param {number} user_id
- * @param {string} email
- * @param {string} user_name
- * @param {any} file
- *
- * @returns {Object} { message: string, user | data : DBdata }
- */
-const updateUserInfo = async (user_id, email, user_name, file) => {
-  const db_option = {
-    user_name,
-    email,
-    ...(file && { profile: file.location }),
-    // { profile: req.file.location } 객체가 req.file이 undefined이 아닌 경우에만 포함
-  };
-  let message = '';
-  if (file && !file.mimetype.startsWith('image/')) {
-    // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
-    throw new Error('Profile type must be only image.');
-  }
-  const user = await User.findByPk(user_id);
-  if (user_name === user.user_name && email === user.email && file === undefined) {
-    message = 'Profile no change.';
-    return { message, user };
-  }
-
-  const check_username = await User.findOne({ where: { user_name } });
-  if (check_username && check_username.user_name !== user.user_name) {
-    throw new Error('The username is already in use.');
-  }
-
-  const check_email = await findUserByEmail(email);
-  if (check_email && check_email.email !== user.email) {
-    throw new Error('The email is already in use.');
-  }
-
-  return User.update(db_option, {
-    where: { id: user_id },
-  }).then(() => {
-    return User.findOne({
-      where: { id: user_id },
-    }).then((data) => {
-      message = 'Profile Edit Success!';
-      return { message, data };
-    });
-  });
-};
-
 module.exports = {
-  findUserByEmail,
-  findUserById,
+  findUser,
   createUser,
+  updateUser,
   verifyLogin,
   verifyRegister,
-  updateUserInfo,
 };

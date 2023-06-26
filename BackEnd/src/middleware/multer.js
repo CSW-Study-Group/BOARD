@@ -31,7 +31,7 @@ const upload = multer({
 
 /**
  * 이미지 받아와서 서버에 저장
- * 파일의 크기가 10Mb 넘어가면 400 반환
+ * 파일의 크기가 10Mb 넘어가면 413 반환
  */
 const imgUpload = async (req, res, next) => {
   try {
@@ -39,8 +39,8 @@ const imgUpload = async (req, res, next) => {
       // 프로필 사진 업로드
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
         // 파일 크기가 제한을 초과한 경우
-        return res.status(400).json({
-          code: 400,
+        return res.status(413).json({
+          code: 413,
           message: 'File size exceeded. please check the file size and try again (not exceeding 10MB)',
         });
       } else if (err) {

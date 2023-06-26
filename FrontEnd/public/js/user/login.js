@@ -23,10 +23,10 @@ function Login() {
     .then((res) => res.json())
     .then((res) => {
         if(res.code === 200) {
-            localStorage.setItem('access_token', res.access_token);
-            localStorage.setItem('refresh_token', res.refresh_token);
+            localStorage.setItem('access_token', res.data.access_token);
+            localStorage.setItem('refresh_token', res.data.refresh_token);
 
-            location.href = "/"; 
+            location.href = "/";
         } else return alert(res.message);
     })
 }

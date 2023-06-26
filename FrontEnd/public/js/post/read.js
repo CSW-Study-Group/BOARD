@@ -19,9 +19,9 @@ window.onload = function checkAuthorization() { // Always execute this function 
         .then((res) => res.json())
         .then((res) => {
             if (res.code === 200 && res.message === 'authorized') {
-                $('form[name="method_form"]').append(owner);
+                $('div[name="method_div"]').append(owner);
             } else if (res.code === 401 && res.message === 'unauthorized') {
-                $('form[name="method_form"]').append();
+                $('div[name="method_div"]').append();
             } else if (res.code === 419) { // Access Token has expired.
                 fetch("/user/token/refresh", {
                     headers: { 'authorization': localStorage.getItem('refresh_token') }
@@ -72,8 +72,45 @@ window.addEventListener('load', function() {
 
 function delete_click() {
     if (confirm("Are you sure want to delete this post?")) {
-        alert("Delete post success.");
-        document.method_form.submit();
+        fetch(`/board/${content_id}`, {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': localStorage.getItem('access_token')
+            },
+        })
+            .then((res) => res.json())
+            .then((res) => {
+                if (res.code === 200) {
+                    alert("Delete post success.");
+                    location.href = "/board";
+                } else if (res.code === 419) {
+                    fetch("/user/token/refresh", {
+                        headers: { 'authorization': localStorage.getItem('refresh_token') }
+                    })
+                        .then((res) => res.json())
+                        .then((res) => {
+                            if(res.code === 419) {
+                                alert(res.message);
+                                localStorage.removeItem('access_token');
+                                localStorage.removeItem('refresh_token');
+                                window.location.href = "/user/login";
+                            } else {
+                                alert(res.message);
+                                localStorage.setItem('access_token', res.access_token);
+                                window.location.reload();
+                            }
+                        })
+                } else { // 401 or 500
+                    alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    location.href = "/user/login";
+                }
+            })
+            .catch((err) => {
+                alert('An error occurred while processing your request. Please try again later.');
+            });
     } else { alert("Delete post cancle."); }
 }
 
@@ -122,6 +159,8 @@ function recommand_click() {
                         })
                 } else { // 401 or 500
                     alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     location.href = "/user/login";
                 }
             })
@@ -149,7 +188,7 @@ function create_comment_post() {
     })
         .then((res) => res.json())
         .then((res) => {
-            if (res.code === 200) {
+            if (res.code === 201) {
                 alert("Create comment success.");
                 location.herf = `/board/${content_id}`
                 location.reload();
@@ -172,6 +211,8 @@ function create_comment_post() {
                     })
             } else { // 401 or 500
                 alert(res.message);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
                 location.href = "/user/login";
             }
         })
@@ -276,6 +317,8 @@ function delete_comment_post(comment_id) {
                     alert("Only the author of the comment can delete it.");
                 } else {
                     alert(res.message);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     location.href = "/user/login";
                 }
             }
