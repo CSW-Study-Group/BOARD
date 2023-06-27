@@ -72,6 +72,8 @@ function profileAuth() {
                 })
         } else { // 401 or 500
             alert(res.message);
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             location.href = "/user/login";
         }
     })
