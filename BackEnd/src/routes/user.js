@@ -59,6 +59,9 @@ router.patch(
   ctrl.updateProfile,
 );
 
+router.post('/attendance', auth, ctrl.attendanceCheck);
+router.get('/attendance', auth, ctrl.getAttendance);
+
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
@@ -67,9 +70,5 @@ router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
-
-// attendance
-router.post('/attendance', auth, ctrl.attendanceCheck);
-router.get('/attendance', auth, ctrl.getAttendance);
 
 module.exports = router;

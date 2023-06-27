@@ -169,8 +169,9 @@ const attendanceCheck = async (req, res) => {
  * @returns {object} { code: number, message: string, data: array }
  */
 const getAttendance = async (req, res) => {
+  const user_id = req.decoded.id;
+
   try {
-    const user_id = req.decoded.id;
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
