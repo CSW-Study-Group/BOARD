@@ -7,17 +7,20 @@
 </head>
 
 <body>
-    <%- include('../partials/nav') %>
+  <div id="data-container"
+     start_date="<%= start_date %>"
+     end_date="<%= end_date %>">
+  </div>
 
-    <div class="container mb-3">
+  <%- include('../partials/nav') %>
 
-        <h3 class="contentBoxTop"><b>Attendance</b></h3>
+  <div class="container mb-3">
 
-    </div>
-    <script src="/js/user/attendance.js" defer></script>
-</body>
+      <h3 class="contentBoxTop"><b>Attendance</b></h3>
 
-<body>
+  </div>
+  <script src="/js/user/attendance.js" defer></script>
+
   <div class="calendar-container">
     <div class="month"></div>
     <table id="calendar">
@@ -47,35 +50,38 @@
   </div>
   
     <script>
+      const container = document.getElementById('data-container');
+      const start_date = container.getAttribute('start_date');
+      const end_date = container.getAttribute('end_date');
+
       const data = JSON.parse(localStorage.getItem('attendanceDays'));
       function generateCalendar(data) {
-        const calendarBody = document.querySelector("#calendar tbody");
-        calendarBody.innerHTML = "";
+        const calendar_body = document.querySelector("#calendar tbody");
+        calendar_body.innerHTML = "";
   
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const lastDate = new Date(year, month + 1, 0).getDate();
+        const month = parseInt(start_date.split('-')[1]);
+        const first_day = parseInt(start_date.split('-')[2]);
+        const last_date = parseInt(end_date.split('-')[2]);
+        console.log(month)
   
-        let dateCount = 1;
+        let date_count = 1;
   
         for (let i = 0; i < 5; i++) {
           const row = document.createElement("tr");
           
           for (let j = 0; j < 7; j++) {
-            if (i === 0 && j < firstDay) {
+            if (i === 0 && j < first_day) {
               const cell = document.createElement("td");
               row.appendChild(cell);
-            } else if (dateCount > lastDate) {
+            } else if (date_count > last_date) {
               const cell = document.createElement("td");
               row.appendChild(cell);
             } else {
               const cell = document.createElement("td");
-              cell.textContent = dateCount;
+              cell.textContent = date_count;
 
               for (let k=0; k<data.length; k++){
-                if (dateCount == data[k]) {
+                if (date_count == data[k]) {
                 cell.classList.add("checked");
                 break;
                 }
@@ -83,15 +89,15 @@
               
   
               row.appendChild(cell);
-              dateCount++;
+              date_count++;
             }
           }
-          calendarBody.appendChild(row);
+          calendar_body.appendChild(row);
         }
   
-        const monthText = document.querySelector(".month");
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        monthText.textContent = monthNames[month];
+        const month_text = document.querySelector(".month");
+        const month_names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        month_text.textContent = month_names[month - 1];
       }
   
       generateCalendar(data);

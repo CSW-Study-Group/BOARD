@@ -26,7 +26,7 @@ const findUser = async (field, value, locate = 1) => {
   if (!user && locate === 0) {
     throw new Error('Can not find profile.');
   } else if (!user && locate === 1) {
-    return null
+    return null;
   } else {
     return user;
   }
