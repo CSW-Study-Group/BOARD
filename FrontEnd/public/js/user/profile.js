@@ -44,12 +44,11 @@ function updateProfile() {
         .then((res) => {
             if(res.code === 200) {
                 alert(res.message);
+                localStorage.setItem('profileData', JSON.stringify({ email: res.data.email, profile: res.data.profile, user_name: res.data.user_name }));
+
                 img.src = res.data.profile;
                 $('input[name=username]').val(res.data.user_name);
                 $('input[name=email]').val(res.data.email);
-            } else if (res.code === 400) {
-                alert(res.message);
-                location.reload();
             } else {
                 alert(res.message);
                 location.reload();

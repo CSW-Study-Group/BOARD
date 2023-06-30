@@ -1,7 +1,7 @@
 'use strict';
 
 const { app, express, bodyParser } = require('./loaders/express');
-const { sequelize, morgan, logger, config, methodOverride, sentry } = require('./loaders/module');
+const { sequelize, morgan, logger, config, methodOverride, sentry, chalk } = require('./loaders/module');
 
 // 웹 세팅
 app.use(express.static('../FrontEnd/public'));
@@ -20,7 +20,7 @@ sentry.init({ // 모든 요청 트래킹
     new sentry.Integrations.Express({ app }),
   ],
   tracesSampleRate: 1.0,
-  enabled: config.get('server.status') !== 'production' ? false : true,
+  enabled: config.get('server.status') === 'production' ? true : false,
 });
 
 app.use(sentry.Handlers.requestHandler()); // 요청정보 캡처
@@ -43,12 +43,15 @@ app.use((req, res, next) => {
 
 app.use('/', api_router);
 
-// 연결
-app.listen(config.get('server.port'), () => {
-  console.log(`Server Running On ${config.get('server.port')} Port!`);
-});
+if (config.get('server.status') !== 'test') {
+  app.listen(config.get('server.port'), () => {
+    console.log(chalk.blue(`Server Running On ${config.get('server.port')} Port.`));
+  });
+}
 
 sequelize
   .sync({ force: false })
-  .then(() => { console.log('Success Connecting DB!'); })
+  .then(() => { config.get('server.status') !== 'test' ? console.log(chalk.blue('Success Connecting DB.')) : null })
   .catch((err) => { console.error(err); });
+
+module.exports = { app };

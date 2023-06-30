@@ -50,8 +50,7 @@ function profileAuth() {
     .then((res) => res.json())
     .then((res) => {
         if(res.code === 200) {
-            const profileData = res.data;
-            localStorage.setItem('profileData', JSON.stringify(profileData));
+            localStorage.setItem('profileData', JSON.stringify({ email: res.data.email, profile: res.data.profile, user_name: res.data.user_name }));
             location.href = "/user/profile/output";
         } else if (res.code === 419) {
             fetch("/user/token/refresh", {
@@ -72,6 +71,8 @@ function profileAuth() {
                 })
         } else { // 401 or 500
             alert(res.message);
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             location.href = "/user/login";
         }
     })

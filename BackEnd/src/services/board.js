@@ -36,7 +36,6 @@ const postBoard = async (title, content, user_id) => {
   return await Post.create({
     title: title,
     content: content,
-    view: 0,
     user_id: user_id,
   });
 };
@@ -66,6 +65,8 @@ const searchByPostId = async (post_id) => {
 
 // 페이징 처리되는 댓글 limit개씩 조회
 const searchCommentByPostId = async (post_id, limit, page) => {
+  if(page >= 1000) throw new Error('Page can only be a number less than 1000.');
+
   let comment = await Comment.findAndCountAll({
     include: [
       {
@@ -92,7 +93,7 @@ const searchCommentByPostId = async (post_id, limit, page) => {
 /**
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
-const editPost = async (title, content, post_id) => {
+const updatePost = async (title, content, post_id) => {
   return await Post.update(
     {
       title: title,
@@ -115,58 +116,65 @@ const deletePost = async (post_id) => {
 /**
  * 게시글에 대한 추천을 한다. (추천 O -> 추천 X) (추천 X -> 추천 O)
  */
-const recommandBoard = async (user_id, content_id) => {
+const recommandBoard = async (user_id, post_id) => {
   const recommand_post = await user_post.findOne({
-    where: { [Op.and]: [{ user_id: user_id }, { post_id: content_id }] },
+    where: { [Op.and]: [{ user_id: user_id }, { post_id: post_id }] },
   });
 
   if (recommand_post !== null) {
     // 추천 취소
     const post = await Post.findOne({
       attributes: ['recommand'],
-      where: { id: content_id },
+      where: { id: post_id },
     });
-    await Post.update({ recommand: --post.recommand }, { where: { id: content_id } });
+    await Post.update({ recommand: --post.recommand }, { where: { id: post_id } });
     await user_post.destroy({
-      where: { [Op.and]: [{ user_id: user_id }, { post_id: content_id }] },
+      where: { [Op.and]: [{ user_id: user_id }, { post_id: post_id }] },
     });
     return { code: 200, message: 'delete', data: post };
   } else {
     // 추천
     const post = await Post.findOne({
       attributes: ['recommand'],
-      where: { id: content_id },
+      where: { id: post_id },
     });
-    await Post.update({ recommand: ++post.recommand }, { where: { id: content_id } });
-    await user_post.create({ user_id: user_id, post_id: content_id });
+    await Post.update({ recommand: ++post.recommand }, { where: { id: post_id } });
+    await user_post.create({ user_id: user_id, post_id: post_id });
     return { code: 200, message: 'create', data: post };
   }
 };
 
 /**
- * content_id에 해당하는 글을 찾고 그 글의 user_id 값을 리턴한다.
+ * 유저 id와 게시글 id를 받아 해당 게시글의 작성자인지 체크한다.
+ *
+ * @param {*} user_id 유저 id
+ * @param {*} post_id 게시글 id
+ * @returns
  */
-const authCheckPost = async (content_id) => {
+const authCheckPost = async (user_id, post_id) => {
   return await Post.findOne({
     attributes: ['user_id'],
-    where: { id: content_id },
-  });
+    where: { id: post_id },
+  }).then((data) => {
+    if (data.user_id === user_id) {
+      return true;
+    } else {
+      return false;
+    }
+  })
 };
 
 /**
- * user_id, content_id에 해당하는 글을 찾아서 리턴한다.
+ * 유저 id와 게시글 id를 받아 해당 게시글을 추천했는지 체크한다.
+ *
+ * @param {*} user_id 유저 id
+ * @param {*} post_id 게시글 id
+ * @returns
  */
-const recommandCheckBoard = async (user_id, content_id) => {
+const recommandCheckBoard = async (user_id, post_id) => {
   return await user_post.findOne({
-    where: { [Op.and]: [{ user_id: user_id }, { post_id: content_id }] },
+    where: { [Op.and]: [{ user_id: user_id }, { post_id: post_id }] },
   });
-};
-
-/**
- * post_id에 해당하는 글을 찾아서 리턴한다.
- */
-const editView = async (post_id) => {
-  return await Post.findOne({ where: { id: post_id } });
 };
 
 /**
@@ -181,14 +189,14 @@ const countPost = async () => {
  *
  * @param {*} comment
  * @param {*} user_id
- * @param {*} content_id
+ * @param {*} post_id
  * @returns
  */
-const commentPost = async (comment, user_id, content_id) => {
+const commentPost = async (comment, user_id, post_id) => {
   return await Comment.create({
     comment: comment,
     user_id: user_id,
-    post_id: content_id,
+    post_id: post_id,
   });
 }
 
@@ -222,7 +230,7 @@ module.exports = {
   postBoard,
   searchByPostId,
   searchCommentByPostId,
-  editPost,
+  updatePost,
   deletePost,
   countPost,
   commentPost,
@@ -230,5 +238,4 @@ module.exports = {
   recommandBoard,
   authCheckPost,
   recommandCheckBoard,
-  editView,
 };

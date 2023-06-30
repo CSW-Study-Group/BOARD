@@ -51,7 +51,7 @@ function Register() {
   })
     .then((res) => res.json())
     .then((res) => {
-      if (res.code === 200) {
+      if (res.code === 201) {
         location.href = "/user/login";
       } else return alert(res.message);
     });
