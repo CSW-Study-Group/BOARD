@@ -69,7 +69,7 @@ router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
 
 // attendance
-router.post('/attendance', auth, ctrl.attendanceCheck);
+router.post('/attendance', auth, ctrl.postAttendance);
 router.get('/attendance', auth, ctrl.getAttendance);
 
 module.exports = router;

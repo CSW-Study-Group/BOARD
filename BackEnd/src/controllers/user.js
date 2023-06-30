@@ -4,6 +4,8 @@ const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
 
+const { startDate, endDate, todayDate } = require('../functions/common')
+
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
@@ -153,19 +155,19 @@ const editProfile = async (req, res) => {
  * 출석했다면 400을 반환
  * 출석하지 않았다면 출석 체크를 하고 200반환
  */
-const attendanceCheck = async (req, res) => {
+const postAttendance = async (req, res) => {
   let user_id = req.decoded.id;
-  const today = new Date().toISOString().slice(0, 10);
+  const today_date = todayDate();
 
   try {
-    const attendance = await user.findAttendance(user_id, today);
+    const attendance = await user.findAttendance(user_id, today_date);
 
     if (attendance) {
-      return fail(res, 400, '오늘은 이미 출석체크를 하셨습니다.');
+      return fail(res, 400, 'Already checked attendance today.');
     }
 
-    await user.createAttendance(user_id, today);
-    return success(res, 200, '출석이 완료되었습니다.');
+    await user.createAttendance(user_id, today_date);
+    return success(res, 201, 'Attendance check success.');
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -178,17 +180,13 @@ const attendanceCheck = async (req, res) => {
 const getAttendance = async (req, res) => {
   try {
     const user_id = req.decoded.id;
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
+    const start_date = startDate();
+    const end_date = endDate();
 
-    const startDate = new Date(year, month - 1, 1).toISOString().slice(0, 10);
-    const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
+    const attendance_dates = await user.findAttendanceDate(user_id, start_date, end_date);
 
-    const attendanceDates = await user.findAttendanceDate(user_id, startDate, endDate);
-
-    const data = attendanceDates.map((attendance) => {
-      const date = new Date(attendance.attendanceDate);
+    const data = attendance_dates.map((attendance) => {
+      const date = new Date(attendance.attendance_date);
       return date.getDate();
     });
 
@@ -223,7 +221,13 @@ const viewProfile = (req, res) => {
  * 출석 페이지를 렌더링한다.
  */
 const viewAttend = (req, res) => {
-  res.render('user/attendance');
+  const start_date = startDate();
+  const end_date = endDate();
+
+  res.render('user/attendance', {
+    start_date: start_date,
+    end_date: end_date
+  });
 };
 
 module.exports = {
@@ -231,7 +235,7 @@ module.exports = {
   postRegister,
   getProfile,
   editProfile,
-  attendanceCheck,
+  postAttendance,
   getAttendance,
   viewLogin,
   viewRegister,

@@ -13,7 +13,7 @@ module.exports = class Attendance extends Sequelize.Model {
                     unique: true,
                     primaryKey: true,
                 },
-                attendanceDate: { 
+                attendance_date: { 
                     type: Sequelize.DATEONLY, 
                     allowNull: false 
                 }

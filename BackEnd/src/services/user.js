@@ -168,35 +168,35 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
  */
 const findAttendance = async (user_id, today) => {
   return await Attendance.findOne({
-    where: { User_id: user_id, attendanceDate: today },
+    where: { User_id: user_id, attendance_date: today },
   });
 };
 
 /**
  * 사용자의 id와 오늘 날짜로 출석 기록을 생성합니다.
  * @param {number} user_id - 사용자 id
- * @param {string} today - 오늘 날짜
+ * @param {string} today_date - 오늘 날짜
  */
-const createAttendance = async (user_id, today) => {
-  await Attendance.create({ user_id: user_id, attendanceDate: today });
+const createAttendance = async (user_id, today_date) => {
+  await Attendance.create({ user_id: user_id, attendance_date: today_date });
 };
 
 /**
  * 사용자의 id, 시작 날짜, 종료 날짜로 그 사이의 출석 날짜를 검색합니다.
  * @param {number} user_id - 사용자 id
- * @param {string} startDate - 시작 날짜
- * @param {string} endDate - 종료 날짜
+ * @param {string} start_date - 시작 날짜
+ * @param {string} end_date - 종료 날짜
  * @returns {object} - { DB data }
  */
-const findAttendanceDate = async (user_id, startDate, endDate) => {
+const findAttendanceDate = async (user_id, start_date, end_date) => {
   return await Attendance.findAll({
     where: {
       user_id: user_id,
-      attendanceDate: {
-        [Op.between]: [startDate, endDate],
+      attendance_date: {
+        [Op.between]: [start_date, end_date],
       },
     },
-    attributes: ['attendanceDate'],
+    attributes: ['attendance_date'],
   });
 };
 
