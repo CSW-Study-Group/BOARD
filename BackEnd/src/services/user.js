@@ -174,7 +174,7 @@ const verifyRegister = async (email, password, user_name) => {
  *
  * @returns {Object} { message: string, user | data : DBdata }
  */
-const updateUserInfo = async (user_id, email, user_name, file) => {
+/*const updateUserInfo = async (user_id, email, user_name, file) => {
   const db_option = {
     user_name,
     email,
@@ -213,6 +213,7 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
     });
   });
 };
+*/
 
 /**
  * 사용자의 id와 오늘 날짜로 출석 기록을 검색합니다.
@@ -260,7 +261,7 @@ module.exports = {
   updateUser,
   verifyLogin,
   verifyRegister,
-  updateUserInfo,
+  //updateUserInfo,
   findAttendance,
   createAttendance,
   findAttendanceDate,
