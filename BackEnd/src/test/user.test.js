@@ -3,7 +3,7 @@
 const request = require('supertest');
 const { app } = require('../../server');
 
-const { User } = require('../utils/connect');
+const { User, Attendance } = require('../utils/connect');
 const user = require('../controllers/user');
 
 const { path, config, chalk } = require('../../loaders/module');
@@ -381,5 +381,85 @@ describe('imgUpload', () => {
     expect(res.statusCode).toEqual(413);
     expect(res.body).toHaveProperty('code', 413);
     expect(res.body).toHaveProperty('message', 'File size exceeded. please check the file size and try again (not exceeding 10MB)');
+  });
+});
+
+/**
+ * * 출석 체크 테스트
+ * 1. 출석 체크 성공
+ * 2. 출석 체크 실패 (오늘 이미 출석 함)
+ */
+describe('postAttendance', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { decoded: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await Attendance.destroy({
+      where: { user_id: 1 },
+    });
+  });
+
+  test(`'should return ${chalk.green(201)} if ${chalk.blue('Attendance check is successful')}`, async () => {
+
+    await user.postAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 201,
+        message: 'Attendance check success.',
+        data: 'No data.'
+      })
+    );
+  });
+
+  test(`'should return ${chalk.yellow(400)} if ${chalk.blue('Attendance has already been checked today')}`, async () => {
+
+    await user.postAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: "No detail.",
+      message: 'Already checked attendance today.',
+    });
+  });
+});
+
+/**
+ * * 출석일 가져오기 테스트
+ * 1. 출석일 가져오기 성공
+ */
+describe('getAttendance', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { decoded: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test(`'should return ${chalk.green(200)} if ${chalk.blue('Get attendance dates successfully')}`, async () => {
+
+    await user.getAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'No message.',
+        data: []
+      })
+    );
   });
 });
