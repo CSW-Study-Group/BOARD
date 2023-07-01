@@ -18,3 +18,9 @@ exports.todayDate = () => {
   const today_date = now.format('YYYY-MM-DD');
   return today_date;
 };
+
+exports.firstDay = () => {
+  const start_date = now.startOf('month');
+  const first_day = start_date.day();
+  return first_day;
+}

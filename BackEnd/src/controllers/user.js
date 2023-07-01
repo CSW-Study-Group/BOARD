@@ -4,7 +4,7 @@ const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
 
-const { startDate, endDate, todayDate } = require('../functions/common');
+const { startDate, endDate, todayDate, firstDay } = require('../functions/common');
 
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
@@ -214,11 +214,11 @@ const viewProfile = (req, res) => {
  * 출석 페이지를 렌더링한다.
  */
 const viewAttend = (req, res) => {
-  const start_date = startDate();
+  const first_day = firstDay();
   const end_date = endDate();
 
   res.render('user/attendance', {
-    start_date: start_date,
+    first_day: first_day,
     end_date: end_date,
   });
 };
