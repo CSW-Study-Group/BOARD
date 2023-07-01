@@ -8,7 +8,7 @@
 
 <body>
   <div id="data-container"
-     start_date="<%= start_date %>"
+     first_day="<%= first_day %>"
      end_date="<%= end_date %>">
   </div>
 
@@ -51,7 +51,7 @@
   
     <script>
       const container = document.getElementById('data-container');
-      const start_date = container.getAttribute('start_date');
+      const first_day = container.getAttribute('first_day');
       const end_date = container.getAttribute('end_date');
 
       const data = JSON.parse(localStorage.getItem('attendanceDays'));
@@ -59,21 +59,19 @@
         const calendar_body = document.querySelector("#calendar tbody");
         calendar_body.innerHTML = "";
   
-        const month = parseInt(start_date.split('-')[1]);
-        const first_day = parseInt(start_date.split('-')[2]);
-        const last_date = parseInt(end_date.split('-')[2]);
-        console.log(month)
+        const month = parseInt(end_date.split('-')[1]);
+        const last_day = parseInt(end_date.split('-')[2]);
   
         let date_count = 1;
   
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) {
           const row = document.createElement("tr");
           
           for (let j = 0; j < 7; j++) {
             if (i === 0 && j < first_day) {
               const cell = document.createElement("td");
               row.appendChild(cell);
-            } else if (date_count > last_date) {
+            } else if (date_count > last_day) {
               const cell = document.createElement("td");
               row.appendChild(cell);
             } else {
