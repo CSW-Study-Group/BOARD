@@ -147,6 +147,40 @@ const editProfile = async (req, res) => {
 };
 
 /**
+ * 현재 비밀번호, 새 비밀번호, 비밀번호 확인 입력받아 비밀번호 변경
+ * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
+ * @param {string} new_password 새 비밀번호
+ */
+const editPassword = async (req, res) => {
+  let { confirm_password, new_password } = req.body;
+  let user_id = req.decoded.id;
+  try {
+    let result = await user.updatePassword(user_id, confirm_password, new_password);
+    if (result.message === 'Password changed') {
+      let data = result.data;
+      return success(res, 200, result.message, data);
+    } else {
+      console.log('else: ' + result.message);
+      throw new Error('Services error.');
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 400; //에러코드 
+        break;
+      case 'Incorrect password.':
+        code = 422; //에러코드 
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
+};
+
+/**
  * 로그인 페이지를 렌더링한다.
  */
 const viewLogin = (req, res) => {
@@ -167,12 +201,21 @@ const viewProfile = (req, res) => {
   res.render('user/profile');
 };
 
+/**
+ * 비밀번호 변경페이지를 렌더링한다.
+ */
+const viewChangePassword = (req, res) => {
+  res.render('user/changePassword');
+};
+
 module.exports = {
   postLogin,
   postRegister,
   getProfile,
   editProfile,
+  editPassword,
   viewLogin,
   viewRegister,
   viewProfile,
+  viewChangePassword,
 };

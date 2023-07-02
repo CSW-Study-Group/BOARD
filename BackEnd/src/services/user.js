@@ -157,6 +157,37 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
   });
 };
 
+/**
+ *  비밀번호 입력받아 확인 후, 비밀번호 변경
+ * @param {number} user_id 
+ * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
+ * @param {string} new_password 새 비밀번호
+ * 
+ * @returns {Object} { message: string, data : DBdata }
+ */
+const updatePassword = async (user_id, confirm_password, new_password) => {
+  let message = '';
+  const user = await User.findByPk(user_id);
+  if (user === null) {
+    throw new Error('Can not find profile.');
+  }
+  const match = await bcrypt.compare(confirm_password, user.password);
+  if (!match) {
+    throw new Error('Incorrect password.');
+  }
+  const encrypted_pw = await bcrypt.hash(new_password, 10);
+  const data = await User.update({ password: encrypted_pw }, {
+    where: { id: user_id },
+  });
+  if (data) {
+    //console.log(user.user_name);
+    message = 'Password changed';
+    return { message, user };
+  } else {
+    throw new Error('Password changed failed');
+  }
+};
+
 module.exports = {
   findUserByEmail,
   findUserById,
@@ -164,4 +195,5 @@ module.exports = {
   verifyLogin,
   verifyRegister,
   updateUserInfo,
+  updatePassword,
 };

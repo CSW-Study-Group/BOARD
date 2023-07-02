@@ -55,6 +55,16 @@ router.patch(
   ctrl.editProfile,
 );
 
+router.patch(
+  '/profile/change_password',
+  auth,
+  [
+    check('confirm_password', 'Please input password.').notEmpty(),
+    check('new_password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    validator,
+  ],
+  ctrl.editPassword);
+
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
@@ -62,5 +72,6 @@ router.get('/token/refresh', issuanceToken);
 router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
+router.get('/profile/change_password', ctrl.viewChangePassword); //인증 필요?
 
 module.exports = router;
