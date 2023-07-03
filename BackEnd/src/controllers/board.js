@@ -1,27 +1,11 @@
 'use strict';
 
 const board = require('../services/board');
-const { User, Post, Comment } = require('../utils/connect');
-
-const {
-  getBoard,
-  postBoard,
-  searchByPostId,
-  searchCommentByPostId,
-  editPost,
-  deletePost,
-  countPost,
-  recommandBoard,
-  authCheckPost,
-  recommandCheckBoard,
-  editView,
-} = board;
-
-var { createSearchQuery } = require('../functions/query');
+const { Op } = require('sequelize');
 
 const { success, fail } = require('../functions/responseStatus');
 
-const { Op } = require('sequelize');
+const { createSearchQuery } = require('../functions/query');
 
 /**
  * page, limit 값을 받아, 해당하는 페이지의 게시글을 조회한다.
@@ -56,7 +40,7 @@ const boardGet = async (req, res) => {
   };
 
   page = !isNaN(page) ? page : 1;
-  if (page > 1000) {
+  if (page >= 1000) {
     return rendering(res, [], 'Page can only be a number less than 1000.');
   }
 
@@ -90,11 +74,11 @@ const boardGet = async (req, res) => {
       }
     }
 
-    const post_count = await countPost();
+    const post_count = await board.countPost();
     if (page * limit > post_count) page = post_count / limit; // 마지막 페이지
     if(!Number.isInteger(page)) page = parseInt(page) + 1;
 
-    await getBoard(where_user, where_content, limit, page).then((data) => {
+    await board.getBoard(where_user, where_content, limit, page).then((data) => {
       return rendering(res, data.rows, null, page, Math.ceil(data.count / Math.max(1, limit)), limit);
     });
   } catch (err) {
@@ -111,9 +95,9 @@ const boardGetByPostId = async (req, res) => {
   const { id: post_id } = req.params;
 
   try {
-    let data = await searchByPostId(post_id);
+    let data = await board.searchByPostId(post_id);
 
-    let comments = await searchCommentByPostId(post_id, 5, 1);
+    let comments = await board.searchCommentByPostId(post_id, 5, 1);
     res.render('post/read', { post: data, count: comments.count, comments: comments.rows, more: comments.more });
   } catch (err) {
     if (err.message === 'No data.') {
@@ -132,8 +116,8 @@ const boardPost = (req, res) => {
   const user_id = req.decoded.id;
 
   try {
-    postBoard(title, content, user_id).then(() => {
-      return success(res, 200, 'Post created success.');
+    board.postBoard(title, content, user_id).then(() => {
+      return success(res, 201, 'Post created success.');
     });
   } catch (err) {
     return fail(res, 500, err.message);
@@ -143,13 +127,20 @@ const boardPost = (req, res) => {
 /**
  * 유저로부터, 게시글의 제목과 내용을 받아 글을 수정한다.
  */
-const boardEditByPostId = (req, res) => {
+const boardUpdateByPostId = async (req, res) => {
   const { title, content } = req.body;
   const { id: post_id } = req.params;
+  const user_id = req.decoded.id;
+
   try {
-    editPost(title, content, post_id).then(() => {
-      return success(res, 200, 'Post edited success.');
-    });
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      await board.updatePost(title, content, post_id);
+      return success(res, 200, 'Post updated success.');
+    } else {
+      return fail(res, 403, 'You are not authorized to update this post.');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -158,12 +149,19 @@ const boardEditByPostId = (req, res) => {
 /**
  * 해당하는 id의 게시글을 삭제한다.
  */
-const boardDeleteByPostId = (req, res) => {
+const boardDeleteByPostId = async (req, res) => {
   const { id: post_id } = req.params;
+  const user_id = req.decoded.id;
+
   try {
-    deletePost(post_id).then(() => {
-      res.redirect('/board' + res.locals.getPostQueryString(false, { page: 1, searchText: '' }));
-    });
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      await board.deletePost(post_id);
+      return success(res, 200, 'Post deleted success.');
+    } else {
+      return fail(res, 403, 'You are not authorized to delete this post.');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -174,10 +172,10 @@ const boardDeleteByPostId = (req, res) => {
  */
 const boardRecommand = async (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    const result = await recommandBoard(user_id, content_id);
+    const result = await board.recommandBoard(user_id, post_id);
     return success(res, 200, result.message, result.data);
   } catch (err) {
     return fail(res, 500, err.message);
@@ -185,60 +183,37 @@ const boardRecommand = async (req, res) => {
 };
 
 /**
- * 유저로부터, 게시글의 제목과 내용을 받아 글을 생성한다.
+ * 유저로부터, 댓글 내용을 받아 생성한다.
  */
-const boardCommentPost = (req, res) => {
+const boardCommentPost = async (req, res) => {
   const { comment } = req.body;
   const user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    Comment.create({
-      comment: comment,
-      user_id: user_id,
-      post_id: content_id,
-    }).then(() => {
-      return res.status(200).json({ code: 200 });
-    });
+    await board.commentPost(comment, user_id, post_id);
+    return success(res, 201, 'Comment created success.');
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    return fail(res, 500, err.message);
   }
 };
 
 /**
- * 해당하는 id의 댓글을 삭제한다.
- * 테이블의 deleted_YN을 Y로 변경한다.
+ * 댓글 id와 유저 id를 받아서 댓글을 삭제한다.
  */
-const boardCommentDelete = (req, res) => {
-  //테이블의 deleted_YN을 Y로 변경한다.
+const boardCommentDelete = async (req, res) => {
   const comment_id = req.params.comment_id;
   const user_id = req.decoded.id;
-  // comment의 user_id와 로그인한 user_id가 같으면 삭제한다.
+
   try {
-    Comment.findOne({
-      where: {
-        id: comment_id,
-      },
-    }).then((data) => {
-      if (data.user_id === user_id) {
-        Comment.update(
-          {
-            deleted_YN: 'Y',
-          },
-          {
-            where: {
-              id: comment_id,
-            },
-          },
-        ).then(() => {
-          return res.status(200).json({ code: 200 });
-        });
-      } else {
-        return res.status(401).json({ code: 401, message: 'unauthorized' });
-      }
-    });
+    await board.commentDelete(comment_id, user_id);
+    return success(res, 200, 'Comment deleted success.');
   } catch (err) {
-    return res.status(500).json({ code: 500, message: err.message });
+    if(err.message === 'unauthorized') {
+      return fail(res, 401, err.message);
+    } else {
+      return fail(res, 500, err.message);
+    }
   }
 };
 
@@ -249,18 +224,13 @@ const boardCommentMore = async (req, res) => {
   const { id: post_id, comment_page: comment_page } = req.params;
 
   try {
-    const comments = await searchCommentByPostId(post_id, 5, comment_page);
-    return res.status(200).json({
-      code: 200,
-      data: {
-        comments: comments,
-      },
-    });
+    const comments = await board.searchCommentByPostId(post_id, 5, comment_page);
+    return success(res, 200, 'Bringing up comments success.', comments);
   } catch (err) {
-    if (err.message === 'No data.') {
-      return res.status(404).json({ code: 404, message: err.message });
+    if (err.message === 'Page can only be a number less than 1000.') {
+      return fail(res, 400, err.message);
     } else {
-      return res.status(500).json({ code: 500, message: err.message });
+      return fail(res, 500, err.message);
     }
   }
 };
@@ -268,18 +238,18 @@ const boardCommentMore = async (req, res) => {
 /**
  * 게시글 작성자인지 확인한다. (작성자일 경우, 200, 작성자가 아닐 경우, 401)
  */
-const postAuthCheck = (req, res) => {
+const postAuthCheck = async (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    authCheckPost(content_id).then((data) => {
-      if (user_id === data.user_id) {
-        return success(res, 200, 'authorized');
-      } else {
-        return success(res, 401, 'unauthorized');
-      }
-    });
+    let is_authorized = await board.authCheckPost(user_id, post_id);
+
+    if (is_authorized) {
+      return success(res, 200, 'authorized');
+    } else {
+      return success(res, 401, 'unauthorized');
+    }
   } catch (err) {
     return fail(res, 500, err.message);
   }
@@ -290,10 +260,10 @@ const postAuthCheck = (req, res) => {
  */
 const boardRecommandCheck = (req, res) => {
   let user_id = req.decoded.id;
-  let content_id = req.params.id;
+  let post_id = req.params.id;
 
   try {
-    recommandCheckBoard(user_id, content_id).then((data) => {
+    board.recommandCheckBoard(user_id, post_id).then((data) => {
       if (data !== null) {
         // 추천 O
         return success(res, 200, 'created');
@@ -317,17 +287,22 @@ const postView = (req, res) => {
 /**
  * 게시글 수정 페이지를 렌더링하면서, 해당 게시글의 정보를 함께 전달한다.
  */
-const editViewByPostId = async (req, res) => {
+const updateViewByPostId = async (req, res) => {
   const { id: post_id } = req.params;
-  let data = await editView(post_id);
-  res.render('post/update', { post: data });
+
+  try {
+    let data = await board.searchByPostId(post_id);
+    res.render('post/update', { post: data });
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
 };
 
 module.exports = {
   boardGet,
   boardGetByPostId,
   boardPost,
-  boardEditByPostId,
+  boardUpdateByPostId,
   boardDeleteByPostId,
   boardRecommand,
   boardCommentPost,
@@ -336,5 +311,5 @@ module.exports = {
   postAuthCheck,
   boardRecommandCheck,
   postView,
-  editViewByPostId,
+  updateViewByPostId,
 };

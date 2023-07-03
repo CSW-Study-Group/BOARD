@@ -25,6 +25,7 @@ class CustomTransport extends Transport {
 
     if (!info.message.includes("'") && message && !/^\/(js|css)/.test(message)) {
       // winston 기본 API로그 & '/js' 또는 '/css'가 앞에 없는 경우
+
       Log.create({
         level: level,
         method: method,
@@ -93,8 +94,8 @@ const logger = createLogger({
   ],
 });
 
-//실제 서비스중인 서버가 아니면
-if (config.get('server.status') !== 'production') {
+// 개발서버일 경우만 콘솔 출력
+if (config.get('server.status') === 'development') {
   logger.add(
     new transports.Console({
       format: combine(colorize({ all: true }), print_format),

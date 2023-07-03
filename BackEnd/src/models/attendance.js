@@ -2,7 +2,7 @@
 
 const Sequelize = require('sequelize');
 
-module.exports = class Comment extends Sequelize.Model {
+module.exports = class Attendance extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
@@ -13,14 +13,9 @@ module.exports = class Comment extends Sequelize.Model {
           unique: true,
           primaryKey: true,
         },
-        comment: {
-          type: Sequelize.TEXT,
+        attendance_date: {
+          type: Sequelize.DATEONLY,
           allowNull: false,
-        },
-        deleted_YN: {
-          type: Sequelize.ENUM('Y', 'N'),
-          allowNull: false,
-          defaultValue: 'N',
         },
       },
       {
@@ -28,8 +23,8 @@ module.exports = class Comment extends Sequelize.Model {
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
-        modelName: 'Comment',
-        tableName: 'post_comment',
+        modelName: 'Attendance',
+        tableName: 'attendance_info',
         charset: 'utf8',
         collate: 'utf8_general_ci',
       },
@@ -37,7 +32,11 @@ module.exports = class Comment extends Sequelize.Model {
   }
 
   static associate(db) {
-    db.Comment.belongsTo(db.User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'cascade', onUpdate: 'cascade' });
-    db.Comment.belongsTo(db.Post, { foreignKey: 'post_id', targetKey: 'id', onDelete: 'cascade', onUpdate: 'cascade' });
+    db.Attendance.belongsTo(db.User, {
+      foreignKey: 'user_id',
+      targetKey: 'id',
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    });
   }
 };

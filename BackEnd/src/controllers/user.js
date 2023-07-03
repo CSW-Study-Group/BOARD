@@ -3,6 +3,9 @@
 const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
+
+const { startDate, endDate, todayDate, firstDay } = require('../functions/common');
+
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
@@ -26,7 +29,7 @@ const postLogin = async (req, res) => {
     switch (err.message) {
       case 'Unauthorized email.':
       case 'Incorrect password.':
-        code = 405;
+        code = 401;
         break;
       default:
         code = 500;
@@ -39,7 +42,7 @@ const postLogin = async (req, res) => {
 /**
  * 사용자에게, username, email, password를 입력받아 회원가입을 시도한다.
  * - username, email이 다른 사용자가 사용하고 있을 시, 409
- * - username, email, password 중 하나라도 입력되지 않았을 시, 405
+ * - username, email, password 중 하나라도 입력되지 않았을 시, 400
  *
  * @param {string} user_name 사용자 이름
  * @param {string} email 이메일
@@ -51,14 +54,11 @@ const postRegister = async (req, res) => {
   let { email, password, user_name } = req.body;
 
   try {
-    await user.verifyRegister(email, password, user_name).then((result) => {
-      if (result) {
-        user.createUser(email, password, user_name);
-        return success(res, 200, 'Register success.');
-      } else {
-        throw new Error('Services error.');
-      }
-    });
+    let result = await user.verifyRegister(email, password, user_name);
+    if (result) {
+      user.createUser(email, password, user_name);
+      return success(res, 201, 'Register success.');
+    }
   } catch (err) {
     let code;
     switch (err.message) {
@@ -69,7 +69,7 @@ const postRegister = async (req, res) => {
       case 'Please input username.':
       case 'Please input id.':
       case 'Please input password.':
-        code = 405;
+        code = 400;
         break;
       default:
         code = 500;
@@ -86,17 +86,13 @@ const postRegister = async (req, res) => {
  */
 const getProfile = async (req, res) => {
   try {
-    user.findUserById(req.decoded.id).then((data) => {
-      if (!data) {
-        throw new Error('Can not find profile.');
-      }
-      return success(res, 200, 'No message', data);
-    });
+    const data = await user.findUser('id', req.decoded.id, 0);
+    return success(res, 200, 'No message', data);
   } catch (err) {
     let code;
     switch (err.message) {
       case 'Can not find profile.':
-        code = 400;
+        code = 404;
         break;
       default:
         code = 500;
@@ -115,15 +111,15 @@ const getProfile = async (req, res) => {
  *  - username, email이 다른 사용자가 사용하고 있을 시, 409 반환
  *  - username, email 변동없을 시 편집 정상 수행
  */
-const editProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   let { user_name, email } = req.body;
   let user_id = req.decoded.id;
   let data;
   try {
-    let result = await user.updateUserInfo(user_id, email, user_name, req.file);
+    let result = await user.updateUser(user_id, email, user_name, req.file);
     if (result.message === 'Profile no change.') {
       data = result.user;
-    } else if (result.message === 'Profile Edit Success!') {
+    } else if (result.message === 'Profile edit success.') {
       data = result.data;
     }
     return success(res, 200, result.message, data);
@@ -142,6 +138,54 @@ const editProfile = async (req, res) => {
         break;
     }
     return fail(res, code, err.message);
+  }
+};
+
+/**
+ * 사용자의 id로 오늘 출석 했는지를 조회합니다.
+ *  @param {number} id
+ * @returns {object} { code: number, message: string }
+ * 출석했다면 409을 반환
+ * 출석하지 않았다면 출석 체크를 하고 200반환
+ */
+const postAttendance = async (req, res) => {
+  let user_id = req.decoded.id;
+  const today_date = todayDate();
+
+  try {
+    const attendance = await user.findAttendance(user_id, today_date);
+
+    if (attendance) {
+      return fail(res, 409, 'Already checked attendance today.');
+    }
+
+    await user.createAttendance(user_id, today_date);
+    return success(res, 201, 'Attendance check success.');
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+/**
+ * 사용자의 id로 출석 기록을 조회합니다.
+ * @returns {object} { code: number, message: string, data: array }
+ */
+const getAttendance = async (req, res) => {
+  try {
+    const user_id = req.decoded.id;
+    const start_date = startDate();
+    const end_date = endDate();
+
+    const attendance_dates = await user.findAttendanceDate(user_id, start_date, end_date);
+
+    const data = attendance_dates.map((attendance) => {
+      const date = new Date(attendance.attendance_date);
+      return date.getDate();
+    });
+
+    return success(res, 200, 'No message.', data);
+  } catch (err) {
+    return fail(res, 500, err.message);
   }
 };
 
@@ -166,12 +210,28 @@ const viewProfile = (req, res) => {
   res.render('user/profile');
 };
 
+/**
+ * 출석 페이지를 렌더링한다.
+ */
+const viewAttend = (req, res) => {
+  const first_day = firstDay();
+  const end_date = endDate();
+
+  res.render('user/attendance', {
+    first_day: first_day,
+    end_date: end_date,
+  });
+};
+
 module.exports = {
   postLogin,
   postRegister,
   getProfile,
-  editProfile,
+  updateProfile,
+  postAttendance,
+  getAttendance,
   viewLogin,
   viewRegister,
   viewProfile,
+  viewAttend,
 };
