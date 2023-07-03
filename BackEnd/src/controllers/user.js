@@ -145,7 +145,7 @@ const updateProfile = async (req, res) => {
  * 사용자의 id로 오늘 출석 했는지를 조회합니다.
  *  @param {number} id
  * @returns {object} { code: number, message: string }
- * 출석했다면 400을 반환
+ * 출석했다면 409을 반환
  * 출석하지 않았다면 출석 체크를 하고 200반환
  */
 const postAttendance = async (req, res) => {
@@ -156,7 +156,7 @@ const postAttendance = async (req, res) => {
     const attendance = await user.findAttendance(user_id, today_date);
 
     if (attendance) {
-      return fail(res, 400, 'Already checked attendance today.');
+      return fail(res, 409, 'Already checked attendance today.');
     }
 
     await user.createAttendance(user_id, today_date);

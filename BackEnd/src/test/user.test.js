@@ -413,7 +413,7 @@ describe('postAttendance', () => {
     });
   });
 
-  test(`'should return ${chalk.green(201)} if ${chalk.blue('Attendance check is successful')}`, async () => {
+  test(`should return ${chalk.green(201)} if ${chalk.blue('attendance check is successful')}`, async () => {
     await user.postAttendance(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
@@ -426,12 +426,10 @@ describe('postAttendance', () => {
     );
   });
 
-  test(`'should return ${chalk.yellow(400)} if ${chalk.blue(
-    'Attendance has already been checked today',
-  )}`, async () => {
+  test(`should return ${chalk.yellow(409)} if ${chalk.blue('attendance has already been checked today')}`, async () => {
     await user.postAttendance(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
       detail: 'No detail.',
       message: 'Already checked attendance today.',
@@ -455,7 +453,7 @@ describe('getAttendance', () => {
     jest.clearAllMocks();
   });
 
-  test(`'should return ${chalk.green(200)} if ${chalk.blue('Get attendance dates successfully')}`, async () => {
+  test(`should return ${chalk.green(200)} if ${chalk.blue('get attendance dates successfully')}`, async () => {
     await user.getAttendance(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
