@@ -4,6 +4,8 @@ const user = require('../services/user');
 
 const { success, fail } = require('../functions/responseStatus');
 
+const { startDate, endDate, todayDate, firstDay } = require('../functions/common');
+
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
  *
@@ -140,6 +142,54 @@ const updateProfile = async (req, res) => {
 };
 
 /**
+ * 사용자의 id로 오늘 출석 했는지를 조회합니다.
+ *  @param {number} id
+ * @returns {object} { code: number, message: string }
+ * 출석했다면 409을 반환
+ * 출석하지 않았다면 출석 체크를 하고 200반환
+ */
+const postAttendance = async (req, res) => {
+  let user_id = req.decoded.id;
+  const today_date = todayDate();
+
+  try {
+    const attendance = await user.findAttendance(user_id, today_date);
+
+    if (attendance) {
+      return fail(res, 409, 'Already checked attendance today.');
+    }
+
+    await user.createAttendance(user_id, today_date);
+    return success(res, 201, 'Attendance check success.');
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+/**
+ * 사용자의 id로 출석 기록을 조회합니다.
+ * @returns {object} { code: number, message: string, data: array }
+ */
+const getAttendance = async (req, res) => {
+  try {
+    const user_id = req.decoded.id;
+    const start_date = startDate();
+    const end_date = endDate();
+
+    const attendance_dates = await user.findAttendanceDate(user_id, start_date, end_date);
+
+    const data = attendance_dates.map((attendance) => {
+      const date = new Date(attendance.attendance_date);
+      return date.getDate();
+    });
+
+    return success(res, 200, 'No message.', data);
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
+};
+
+/**
  * 로그인 페이지를 렌더링한다.
  */
 const viewLogin = (req, res) => {
@@ -160,12 +210,28 @@ const viewProfile = (req, res) => {
   res.render('user/profile');
 };
 
+/**
+ * 출석 페이지를 렌더링한다.
+ */
+const viewAttend = (req, res) => {
+  const first_day = firstDay();
+  const end_date = endDate();
+
+  res.render('user/attendance', {
+    first_day: first_day,
+    end_date: end_date,
+  });
+};
+
 module.exports = {
   postLogin,
   postRegister,
   getProfile,
   updateProfile,
+  postAttendance,
+  getAttendance,
   viewLogin,
   viewRegister,
   viewProfile,
+  viewAttend,
 };

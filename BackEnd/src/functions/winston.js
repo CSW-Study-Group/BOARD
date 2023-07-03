@@ -25,6 +25,7 @@ class CustomTransport extends Transport {
 
     if (!info.message.includes("'") && message && !/^\/(js|css)/.test(message)) {
       // winston 기본 API로그 & '/js' 또는 '/css'가 앞에 없는 경우
+
       Log.create({
         level: level,
         method: method,

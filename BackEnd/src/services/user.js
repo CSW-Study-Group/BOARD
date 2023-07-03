@@ -1,6 +1,6 @@
 'use strict';
 
-const { User } = require('../utils/connect');
+const { User, Attendance } = require('../utils/connect');
 const { Op } = require('sequelize');
 
 const { accessToken, refreshToken } = require('../functions/signJWT');
@@ -26,7 +26,7 @@ const findUser = async (field, value, locate = 1) => {
   if (!user && locate === 0) {
     throw new Error('Can not find profile.');
   } else if (!user && locate === 1) {
-    return null
+    return null;
   } else {
     return user;
   }
@@ -165,10 +165,53 @@ const verifyRegister = async (email, password, user_name) => {
   });
 };
 
+/**
+ * 사용자의 id와 오늘 날짜로 출석 기록을 검색합니다.
+ * @param {number} user_id - 사용자 id
+ * @param {string} today - 오늘 날짜
+ * @returns {object} - { DB data }
+ */
+const findAttendance = async (user_id, today) => {
+  return await Attendance.findOne({
+    where: { User_id: user_id, attendance_date: today },
+  });
+};
+
+/**
+ * 사용자의 id와 오늘 날짜로 출석 기록을 생성합니다.
+ * @param {number} user_id - 사용자 id
+ * @param {string} today_date - 오늘 날짜
+ */
+const createAttendance = async (user_id, today_date) => {
+  await Attendance.create({ user_id: user_id, attendance_date: today_date });
+};
+
+/**
+ * 사용자의 id, 시작 날짜, 종료 날짜로 그 사이의 출석 날짜를 검색합니다.
+ * @param {number} user_id - 사용자 id
+ * @param {string} start_date - 시작 날짜
+ * @param {string} end_date - 종료 날짜
+ * @returns {object} - { DB data }
+ */
+const findAttendanceDate = async (user_id, start_date, end_date) => {
+  return await Attendance.findAll({
+    where: {
+      user_id: user_id,
+      attendance_date: {
+        [Op.between]: [start_date, end_date],
+      },
+    },
+    attributes: ['attendance_date'],
+  });
+};
+
 module.exports = {
   findUser,
   createUser,
   updateUser,
   verifyLogin,
   verifyRegister,
+  findAttendance,
+  createAttendance,
+  findAttendanceDate,
 };

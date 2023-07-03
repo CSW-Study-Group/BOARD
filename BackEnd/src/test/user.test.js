@@ -3,7 +3,7 @@
 const request = require('supertest');
 const { app } = require('../../server');
 
-const { User } = require('../utils/connect');
+const { User, Attendance } = require('../utils/connect');
 const user = require('../controllers/user');
 
 const { path, config, chalk } = require('../../loaders/module');
@@ -34,7 +34,9 @@ describe('postLogin', () => {
     jest.clearAllMocks();
   });
 
-  test(`should return ${chalk.green(200)} with access_token and refresh_token if ${chalk.blue(`login is successful`)}`, async () => {
+  test(`should return ${chalk.green(200)} with access_token and refresh_token if ${chalk.blue(
+    `login is successful`,
+  )}`, async () => {
     await user.postLogin(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
@@ -44,7 +46,7 @@ describe('postLogin', () => {
       data: {
         access_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
         refresh_token: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
-      }
+      },
     });
   });
 
@@ -99,12 +101,14 @@ describe('postRegister', () => {
     jest.clearAllMocks();
   });
 
-  test(`should register a new user and return ${chalk.green(201)} if ${chalk.blue(`verification is successful`)}`, async () => {
+  test(`should register a new user and return ${chalk.green(201)} if ${chalk.blue(
+    `verification is successful`,
+  )}`, async () => {
     await User.destroy({ where: { email: 'test_register@example.com' } });
     await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith({ code: 201, message: "Register success.", data: "No data." });
+    expect(res.json).toHaveBeenCalledWith({ code: 201, message: 'Register success.', data: 'No data.' });
   });
 
   test(`should return ${chalk.yellow(409)} and error message if ${chalk.blue(`username already exists`)}`, async () => {
@@ -114,7 +118,7 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Exist username.',
     });
   });
@@ -126,19 +130,21 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Exist email.',
     });
   });
 
-  test(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(`username field is missing`)}`, async () => {
+  test(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(
+    `username field is missing`,
+  )}`, async () => {
     req.body.user_name = '';
 
     await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Please input username.',
     });
   });
@@ -150,19 +156,21 @@ describe('postRegister', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Please input id.',
     });
   });
 
-  test(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(`password field is missing`)}`, async () => {
+  test(`should return ${chalk.yellow(400)} and error message if ${chalk.blue(
+    `password field is missing`,
+  )}`, async () => {
     req.body.password = '';
 
     await user.postRegister(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Please input password.',
     });
   });
@@ -217,7 +225,7 @@ describe('getProfile', () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        detail: "No detail.",
+        detail: 'No detail.',
         message: 'Can not find profile.',
       }),
     );
@@ -271,13 +279,13 @@ describe('editProfile', () => {
   });
 
   afterEach(async () => {
-    await User.update({ user_name: 'test_profile', email: 'test_profile@example.com' }, { where: { id: 2 }});
+    await User.update({ user_name: 'test_profile', email: 'test_profile@example.com' }, { where: { id: 2 } });
     jest.clearAllMocks();
   });
 
   test(`should return ${chalk.green(200)} if ${chalk.blue(`edit profile successful`)}`, async () => {
     req.body.user_name = 'test_profile123';
-    req.body.email = 'test_profile123@example.com'
+    req.body.email = 'test_profile123@example.com';
 
     await user.updateProfile(req, res);
 
@@ -323,7 +331,7 @@ describe('editProfile', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      detail: "No detail.",
+      detail: 'No detail.',
       message: 'Profile type must be only image.',
     });
   });
@@ -362,9 +370,7 @@ describe('imgUpload', () => {
     imagePath = path.join(__dirname, 'fixtures', 'large-image.jpg');
 
     // 로그인하여 토큰 발급
-    const res = await request(app)
-      .post('/user/login')
-      .send({ email: 'test_user@example.com', password: 'password' });
+    const res = await request(app).post('/user/login').send({ email: 'test_user@example.com', password: 'password' });
     token = res.body.data.access_token;
   });
 
@@ -373,13 +379,90 @@ describe('imgUpload', () => {
   });
 
   test(`should return ${chalk.yellow(413)} if ${chalk.blue('file size exceeds 10MB')}`, async () => {
-    const res = await request(app)
-      .patch('/user/profile')
-      .set('authorization', `${token}`)
-      .attach('image', imagePath);
+    const res = await request(app).patch('/user/profile').set('authorization', `${token}`).attach('image', imagePath);
 
     expect(res.statusCode).toEqual(413);
     expect(res.body).toHaveProperty('code', 413);
-    expect(res.body).toHaveProperty('message', 'File size exceeded. please check the file size and try again (not exceeding 10MB)');
+    expect(res.body).toHaveProperty(
+      'message',
+      'File size exceeded. please check the file size and try again (not exceeding 10MB)',
+    );
+  });
+});
+
+/**
+ * * 출석 체크 테스트
+ * 1. 출석 체크 성공
+ * 2. 출석 체크 실패 (오늘 이미 출석 함)
+ */
+describe('postAttendance', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { decoded: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await Attendance.destroy({
+      where: { user_id: 1 },
+    });
+  });
+
+  test(`should return ${chalk.green(201)} if ${chalk.blue('attendance check is successful')}`, async () => {
+    await user.postAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 201,
+        message: 'Attendance check success.',
+        data: 'No data.',
+      }),
+    );
+  });
+
+  test(`should return ${chalk.yellow(409)} if ${chalk.blue('attendance has already been checked today')}`, async () => {
+    await user.postAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: 'No detail.',
+      message: 'Already checked attendance today.',
+    });
+  });
+});
+
+/**
+ * * 출석일 가져오기 테스트
+ * 1. 출석일 가져오기 성공
+ */
+describe('getAttendance', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { decoded: { id: 1 } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test(`should return ${chalk.green(200)} if ${chalk.blue('get attendance dates successfully')}`, async () => {
+    await user.getAttendance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'No message.',
+        data: [],
+      }),
+    );
   });
 });

@@ -15,24 +15,26 @@ const ctrl = require('../controllers/user');
 // methods for user
 router.post(
   '/login',
-  [
-    check('email', 'Please input id.').notEmpty(),
-    check('password', 'Please input password.').notEmpty(),
-    validator
-  ],
+  [check('email', 'Please input id.').notEmpty(), check('password', 'Please input password.').notEmpty(), validator],
   ctrl.postLogin,
 );
 
 router.post(
   '/register',
   [
-    check('user_name', 'Username must be longer than 2 characters & shorter than 31 characters.').isLength({ min: 3, max: 30 }),
+    check('user_name', 'Username must be longer than 2 characters & shorter than 31 characters.').isLength({
+      min: 3,
+      max: 30,
+    }),
     check('email')
       .isEmail()
       .withMessage('Email must be in the correct format.')
       .isLength({ max: 30 })
       .withMessage('Email must be shorter than 31 characters.'),
-    check('password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    check('password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({
+      min: 3,
+      max: 100,
+    }),
     validator,
   ],
   ctrl.postRegister,
@@ -44,7 +46,9 @@ router.patch(
   auth,
   imgUpload,
   [
-    check('user_name').isLength({ min: 3, max: 30 }).withMessage('Username must be longer than 2 characters & shorter than 31 characters.'),
+    check('user_name')
+      .isLength({ min: 3, max: 30 })
+      .withMessage('Username must be longer than 2 characters & shorter than 31 characters.'),
     check('email')
       .isEmail()
       .withMessage('Email must be in the correct format.')
@@ -55,6 +59,9 @@ router.patch(
   ctrl.updateProfile,
 );
 
+router.post('/attendance', auth, ctrl.postAttendance);
+router.get('/attendance', auth, ctrl.getAttendance);
+
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
@@ -62,5 +69,6 @@ router.get('/token/refresh', issuanceToken);
 router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
+router.get('/attendance/output', ctrl.viewAttend);
 
 module.exports = router;
