@@ -47,13 +47,12 @@
         </div>
     </div>
     <script>
-        const url = new URL(window.location.href);
-        const urlParams = url.searchParams;
+        const data = JSON.parse(localStorage.getItem('profileData'));
         const img = document.querySelector('img.profile');
 
-        img.src = urlParams.get('profile');
-        $('input[name=username]').val(urlParams.get('user_name'));
-        $('input[name=email]').val(urlParams.get('email'));
+        img.src = data.profile
+        $('input[name=username]').val(data.user_name);
+        $('input[name=email]').val(data.email);
 
         function loginCheck() {
             if (!localStorage.getItem('access_token')) {
