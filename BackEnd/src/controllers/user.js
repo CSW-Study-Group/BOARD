@@ -200,7 +200,7 @@ const editPassword = async (req, res) => {
   try {
     let result = await user.updatePassword(user_id, confirm_password, new_password);
     if (result.message === 'Password changed') {
-      let data = result.data;
+      let data = result.user;
       return success(res, 200, result.message, data);
     } else {
       console.log('else: ' + result.message);

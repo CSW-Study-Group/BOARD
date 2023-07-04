@@ -69,7 +69,7 @@ const updateUser = async (user_id, email, user_name, file) => {
     // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
     throw new Error('Profile type must be only image.');
   }
-  const user = await User.findByPk(user_id);
+  const user = await User.findByPk(user_id); // findeUser로 바꾸는지?
   if (user_name === user.user_name && email === user.email && file === undefined) {
     message = 'Profile no change.';
     return { message, user };
@@ -206,55 +206,6 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
 };
 
 /**
- * 사용자에게, username, email을 입력받아 프로필을 편집합니다.
- * @param {number} user_id
- * @param {string} email
- * @param {string} user_name
- * @param {any} file
- *
- * @returns {Object} { message: string, user | data : DBdata }
- */
-const updateUserInfo = async (user_id, email, user_name, file) => {
-  const db_option = {
-    user_name,
-    email,
-    ...(file && { profile: file.location }),
-    // { profile: req.file.location } 객체가 req.file이 undefined이 아닌 경우에만 포함
-  };
-  let message = '';
-  if (file && !file.mimetype.startsWith('image/')) {
-    // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
-    throw new Error('Profile type must be only image.');
-  }
-  const user = await User.findByPk(user_id);
-  if (user_name === user.user_name && email === user.email && file === undefined) {
-    message = 'Profile no change.';
-    return { message, user };
-  }
-
-  const check_username = await User.findOne({ where: { user_name } });
-  if (check_username && check_username.user_name !== user.user_name) {
-    throw new Error('The username is already in use.');
-  }
-
-  const check_email = await findUserByEmail(email);
-  if (check_email && check_email.email !== user.email) {
-    throw new Error('The email is already in use.');
-  }
-
-  return User.update(db_option, {
-    where: { id: user_id },
-  }).then(() => {
-    return User.findOne({
-      where: { id: user_id },
-    }).then((data) => {
-      message = 'Profile Edit Success!';
-      return { message, data };
-    });
-  });
-};
-
-/**
  *  비밀번호 입력받아 확인 후, 비밀번호 변경
  * @param {number} user_id 
  * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
@@ -264,7 +215,7 @@ const updateUserInfo = async (user_id, email, user_name, file) => {
  */
 const updatePassword = async (user_id, confirm_password, new_password) => {
   let message = '';
-  const user = await User.findByPk(user_id);
+  const user = await User.findByPk(user_id); // findeUser로 바꾸는지?
   if (user === null) {
     throw new Error('Can not find profile.');
   }
@@ -294,6 +245,5 @@ module.exports = {
   findAttendance,
   createAttendance,
   findAttendanceDate,
-  updateUserInfo,
   updatePassword,
 };
