@@ -32,9 +32,8 @@ function passwordPatch() {
     }).then((res) => res.json())
         .then((res) => {
             if (res.code === 200) {
-                console.log(res);
-                location.href = "/"
-            } else if (res.code === 422 || res.code === 400) {
+                location.href = "/" // 변경후 페이지 위치 확인 필요
+            } else {
                 alert(res.message);
                 location.reload();
             }

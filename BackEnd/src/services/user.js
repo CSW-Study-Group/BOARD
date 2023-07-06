@@ -207,10 +207,10 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
 
 /**
  *  비밀번호 입력받아 확인 후, 비밀번호 변경
- * @param {number} user_id 
+ * @param {number} user_id
  * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
  * @param {string} new_password 새 비밀번호
- * 
+ *
  * @returns {Object} { message: string, data : DBdata }
  */
 const updatePassword = async (user_id, confirm_password, new_password) => {
@@ -224,9 +224,12 @@ const updatePassword = async (user_id, confirm_password, new_password) => {
     throw new Error('Incorrect password.');
   }
   const encrypted_pw = await bcrypt.hash(new_password, 10);
-  const data = await User.update({ password: encrypted_pw }, {
-    where: { id: user_id },
-  });
+  const data = await User.update(
+    { password: encrypted_pw },
+    {
+      where: { id: user_id },
+    },
+  );
   if (data) {
     //console.log(user.user_name);
     message = 'Password changed';

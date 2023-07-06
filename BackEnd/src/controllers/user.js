@@ -203,17 +203,16 @@ const editPassword = async (req, res) => {
       let data = result.user;
       return success(res, 200, result.message, data);
     } else {
-      console.log('else: ' + result.message);
       throw new Error('Services error.');
     }
   } catch (err) {
     let code;
     switch (err.message) {
       case 'Can not find profile.':
-        code = 400; //에러코드 
+        code = 400; //에러코드 확인필요
         break;
       case 'Incorrect password.':
-        code = 422; //에러코드 
+        code = 401; //에러코드 422?
         break;
       default:
         code = 500;
