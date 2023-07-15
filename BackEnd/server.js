@@ -15,12 +15,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(methodOverride('_method'));
 
-sentry.init({ // 모든 요청 트래킹
+sentry.init({
+  // 모든 요청 트래킹
   dsn: config.get('server.dsn'),
-  integrations: [
-    new sentry.Integrations.Http({ tracing: true }),
-    new sentry.Integrations.Express({ app }),
-  ],
+  integrations: [new sentry.Integrations.Http({ tracing: true }), new sentry.Integrations.Express({ app })],
   tracesSampleRate: 1.0,
   enabled: config.get('server.status') === 'production' ? true : false,
 });
@@ -29,20 +27,11 @@ app.use(sentry.Handlers.requestHandler()); // 요청정보 캡처
 app.use(sentry.Handlers.tracingHandler()); // 성능정보 캡처
 app.use(sentry.Handlers.errorHandler()); // 에러정보 캡처
 
-const detectAttack = (searchText) => {  // 서버 공격 패턴
-  const xss_patterns = [
-    /<script>/i,
-    /<img src=/i,
-    /onmouseover=/i,
-    /javascript:/i
-  ];
+const detectAttack = (searchText) => {
+  // 서버 공격 패턴
+  const xss_patterns = [/<script>/i, /<img src=/i, /onmouseover=/i, /javascript:/i];
 
-  const injection_patterns = [
-    /SELECT\s*.*\s*FROM/i,
-    /INSERT\s+INTO/i,
-    /UPDATE\s+.*\s+SET/i,
-    /DELETE\s+FROM/i
-  ];
+  const injection_patterns = [/SELECT\s*.*\s*FROM/i, /INSERT\s+INTO/i, /UPDATE\s+.*\s+SET/i, /DELETE\s+FROM/i];
 
   const patterns = [...xss_patterns, ...injection_patterns];
   return patterns.some((pattern) => pattern.test(searchText));
@@ -76,11 +65,10 @@ const ipBlock = (req, res, next) => {
       blockedIP.postBlockedIp(req.ip);
 
       console.log(`IP address ${req.ip} blocked and saved in the database.`);
-  
+
       return res.status(403).send('Your IP address is blocked');
     }
-  }
-  catch {
+  } catch {
     return fail(res, 500, `Failed to save blocked IP address ${req.ip} in the database:`);
   }
   next();
@@ -94,12 +82,16 @@ const api_router = require('./src/routes');
 const blocked_ips = [];
 
 app.use((req, res, next) => {
-  const ip = req.ip.replace(/^.*:/, "");
+  const ip = req.ip.replace(/^.*:/, '');
 
   if (blocked_ips.includes(ip)) {
     res.status(403).send('Access denied.');
   } else {
-    morgan(`:method ":url HTTP/:http-version" :status :response-time ms ${ip}`, { stream: logger.stream })(req, res, next);
+    morgan(`:method ":url HTTP/:http-version" :status :response-time ms ${ip}`, { stream: logger.stream })(
+      req,
+      res,
+      next,
+    );
   }
 });
 
@@ -115,7 +107,11 @@ if (config.get('server.status') !== 'test') {
 
 sequelize
   .sync({ force: false })
-  .then(() => { config.get('server.status') !== 'test' ? console.log(chalk.blue('Success Connecting DB.')) : null })
-  .catch((err) => { console.error(err); });
+  .then(() => {
+    config.get('server.status') !== 'test' ? console.log(chalk.blue('Success Connecting DB.')) : null;
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
 module.exports = { app };
