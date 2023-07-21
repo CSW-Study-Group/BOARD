@@ -199,8 +199,9 @@ const editPassword = async (req, res) => {
   let user_id = req.decoded.id;
   try {
     let result = await user.updatePassword(user_id, confirm_password, new_password);
-    if (result.message === 'Password changed') {
+    if (result.message === 'Password changed.') {
       let data = result.user;
+      //console.log(result);
       return success(res, 200, result.message, data);
     } else {
       throw new Error('Services error.');
@@ -209,10 +210,10 @@ const editPassword = async (req, res) => {
     let code;
     switch (err.message) {
       case 'Can not find profile.':
-        code = 400; //에러코드 확인필요
+        code = 404; //에러코드
         break;
       case 'Incorrect password.':
-        code = 401; //에러코드 422?
+        code = 401; //에러코드
         break;
       default:
         code = 500;

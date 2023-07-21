@@ -231,11 +231,10 @@ const updatePassword = async (user_id, confirm_password, new_password) => {
     },
   );
   if (data) {
-    //console.log(user.user_name);
-    message = 'Password changed';
+    message = 'Password changed.';
     return { message, user };
   } else {
-    throw new Error('Password changed failed');
+    throw new Error('Password changed failed.');
   }
 };
 
