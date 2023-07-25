@@ -28,6 +28,9 @@ app.use(sentry.Handlers.errorHandler()); // 에러정보 캡처
 
 app.use(ipBlock); // 서버 공격 감지 후 ip 차단 목록에 추가
 app.use(ipCheck); // 차단 목록에 있는 ip 차단
+app.use((req, res, next) => {
+  morgan(`:method ":url HTTP/:http-version" :status :response-time ms ${req.headers['x-forwarded-for']}`, { stream: logger.stream })(req, res, next);
+});
 
 // 라우팅
 const api_router = require('./src/routes');
