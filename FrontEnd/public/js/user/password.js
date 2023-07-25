@@ -12,7 +12,7 @@ function passwordPatch() {
     if (!(confirm_password && new_password && new_password_confirm)) {
         return alert("Please input password.");
     } else if (new_password !== new_password_confirm) {
-        return alert("coffirm password does not match.");
+        return alert("confirm password does not match.");
     } else if (new_password.length < 3 || new_password.length > 100) {
         return alert("Password must be longer than 2 characters & shorter than 101 characters.");
     }
