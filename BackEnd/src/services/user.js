@@ -215,7 +215,7 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
  */
 const updatePassword = async (user_id, confirm_password, new_password) => {
   let message = '';
-  const user = await User.findByPk(user_id); // findeUser로 바꾸는지?
+  const user = await User.findByPk(user_id);
   if (user === null) {
     throw new Error('Can not find profile.');
   }

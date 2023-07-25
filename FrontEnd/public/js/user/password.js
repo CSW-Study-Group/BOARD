@@ -32,7 +32,7 @@ function passwordPatch() {
     }).then((res) => res.json())
         .then((res) => {
             if (res.code === 200) {
-                location.href = "/" // 변경후 페이지 위치 확인 필요
+                location.href = "/"
             } else {
                 alert(res.message);
                 location.reload();

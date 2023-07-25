@@ -497,6 +497,7 @@ describe('passwordChange', () => {
     jest.clearAllMocks();
   });
 
+  //비밀번호 변경 성공
   test(`should return ${chalk.green(200)} if ${chalk.blue(`Password changed.`)}`, async () => {
     await user.editPassword(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -513,6 +514,7 @@ describe('passwordChange', () => {
     );
   });
 
+  //비밀번호 변경 실패 (비밀번호 오류)
   test(`should return ${chalk.yellow(401)} if ${chalk.blue(`Incorrect password.`)}`, async () => {
     req.body.confirm_password = 'differentpassword';
     await user.editPassword(req, res);
@@ -523,6 +525,8 @@ describe('passwordChange', () => {
       message: 'Incorrect password.',
     });
   });
+
+  //비밀번호 변경 실패 (프로필 조회 실패)
   test(`should return ${chalk.yellow(404)} if ${chalk.blue(`Can not find profile.`)}`, async () => {
     req.decoded.id = 6974;
     await user.editPassword(req, res);

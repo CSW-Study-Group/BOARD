@@ -80,6 +80,6 @@ router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
-router.get('/profile/change_password', ctrl.viewChangePassword); //인증 필요?
+router.get('/profile/change_password', ctrl.viewChangePassword);
 
 module.exports = router;
