@@ -6,6 +6,7 @@ const models = {
   Comment: require('./comment'),
   Log: require('./log'),
   Attendance: require('./attendance'),
+  BlockedIp: require('./blockedIp'),
 };
 
 module.exports = models;
