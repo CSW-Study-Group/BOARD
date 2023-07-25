@@ -260,7 +260,7 @@ const viewAttend = (req, res) => {
  * 비밀번호 변경페이지를 렌더링한다.
  */
 const viewChangePassword = (req, res) => {
-  res.render('user/changePassword');
+  res.render('user/password');
 };
 
 module.exports = {

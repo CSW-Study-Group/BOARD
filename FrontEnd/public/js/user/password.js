@@ -22,7 +22,7 @@ function passwordPatch() {
         new_password: new_password,
     };
 
-    fetch("/user/profile/change_password", {
+    fetch("/user/profile/password", {
         method: 'PATCH',
         headers: {
             'content-type': 'application/json',

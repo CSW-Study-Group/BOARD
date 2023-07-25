@@ -528,7 +528,7 @@ describe('passwordChange', () => {
 
   //비밀번호 변경 실패 (프로필 조회 실패)
   test(`should return ${chalk.yellow(404)} if ${chalk.blue(`can not find profile`)}`, async () => {
-    req.decoded.id = 6974;
+    req.decoded.id = 0;
     await user.editPassword(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);

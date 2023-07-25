@@ -63,7 +63,7 @@ router.post('/attendance', auth, ctrl.postAttendance);
 router.get('/attendance', auth, ctrl.getAttendance);
 
 router.patch(
-  '/profile/change_password',
+  '/profile/password',
   auth,
   [
     check('confirm_password', 'Please input password.').notEmpty(),
@@ -80,6 +80,6 @@ router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
-router.get('/profile/change_password', ctrl.viewChangePassword);
+router.get('/profile/password', ctrl.viewChangePassword);
 
 module.exports = router;
