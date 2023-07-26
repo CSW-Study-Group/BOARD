@@ -69,7 +69,7 @@ const updateUser = async (user_id, email, user_name, file) => {
     // mimetype이 image 형식이 아니라면 오류 처리 로직 실행
     throw new Error('Profile type must be only image.');
   }
-  const user = await User.findByPk(user_id);
+  const user = await User.findByPk(user_id); // findeUser로 바꾸는지?
   if (user_name === user.user_name && email === user.email && file === undefined) {
     message = 'Profile no change.';
     return { message, user };
@@ -205,6 +205,39 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
   });
 };
 
+/**
+ *  비밀번호 입력받아 확인 후, 비밀번호 변경
+ * @param {number} user_id
+ * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
+ * @param {string} new_password 새 비밀번호
+ *
+ * @returns {Object} { message: string, data : DBdata }
+ */
+const updatePassword = async (user_id, confirm_password, new_password) => {
+  let message = '';
+  const user = await User.findByPk(user_id);
+  if (user === null) {
+    throw new Error('Can not find profile.');
+  }
+  const match = await bcrypt.compare(confirm_password, user.password);
+  if (!match) {
+    throw new Error('Incorrect password.');
+  }
+  const encrypted_pw = await bcrypt.hash(new_password, 10);
+  const data = await User.update(
+    { password: encrypted_pw },
+    {
+      where: { id: user_id },
+    },
+  );
+  if (data) {
+    message = 'Password changed.';
+    return { message, user };
+  } else {
+    throw new Error('Password changed failed.');
+  }
+};
+
 module.exports = {
   findUser,
   createUser,
@@ -214,4 +247,5 @@ module.exports = {
   findAttendance,
   createAttendance,
   findAttendanceDate,
+  updatePassword,
 };

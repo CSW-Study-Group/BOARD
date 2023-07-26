@@ -62,6 +62,16 @@ router.patch(
 router.post('/attendance', auth, ctrl.postAttendance);
 router.get('/attendance', auth, ctrl.getAttendance);
 
+router.patch(
+  '/profile/password',
+  auth,
+  [
+    check('confirm_password', 'Please input password.').notEmpty(),
+    check('new_password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    validator,
+  ],
+  ctrl.editPassword);
+
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
@@ -70,5 +80,6 @@ router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
+router.get('/profile/password', ctrl.viewChangePassword);
 
 module.exports = router;
