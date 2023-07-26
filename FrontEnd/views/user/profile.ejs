@@ -38,6 +38,9 @@
                     </div>
                 </fieldset>
                 <form>
+                    <button style="margin: 5px 5px; float: right;" class="btn btn-secondary"  onclick="loginCheck()" type="button">비밀번호 변경</button>
+                </form>
+                <form>
                     <button style="margin: 5px 5px; float: right;" class="btn btn-secondary" id="update_btn" type="button">프로필 편집</button>
                 </form>
             </div>
@@ -50,6 +53,13 @@
         img.src = data.profile
         $('input[name=username]').val(data.user_name);
         $('input[name=email]').val(data.email);
+
+        function loginCheck() {
+            if (!localStorage.getItem('access_token')) {
+                alert("Please login first.");
+                location.href = '/user/login';
+            } else { location.href = '/user/profile/password'; }
+        }
     </script>
     <script src="/js/user/profile.js" defer></script>
 </body>

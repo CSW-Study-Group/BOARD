@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.1](https://github.com/CSW-Study-Group/BOARD/compare/v1.6.0...v1.6.1) (2023-07-26)
+
+
+### Features
+
+* 비밀번호 변경 기능 추가 ([cdc5b54](https://github.com/CSW-Study-Group/BOARD/commit/cdc5b542dc21a957399a1bad72441f5e7c23298b))
+* 서버 공격에 따른 ip 차단 기능 추가 ([af45988](https://github.com/CSW-Study-Group/BOARD/commit/af459883cfb185212d8a0ea240b4b046bd4ef3f5))
+
+
+### Bug Fixes
+
+* Morgan, Winston 누락 해결 & 리팩토링 ([13a751d](https://github.com/CSW-Study-Group/BOARD/commit/13a751dc8531ede996c595d17173702b0ce51eb4))
+
 ## [1.6.0](https://github.com/CSW-Study-Group/BOARD/compare/v1.5.0...v1.6.0) (2023-07-03)
 
 

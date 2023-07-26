@@ -8,6 +8,8 @@ const user = require('../controllers/user');
 
 const { path, config, chalk } = require('../../loaders/module');
 
+const bcrypt = require('bcrypt');
+
 /**
  * * 로그인 테스트
  * 1. 로그인 성공
@@ -464,5 +466,75 @@ describe('getAttendance', () => {
         data: [],
       }),
     );
+  });
+});
+
+/**
+ * *비밀번호 변경 테스트
+ * 1. 비밀번호 변경 성공
+ * 2. 비밀번호 변경 실패 (비밀번호 에러)
+ * 3. 프로필 조회 실패
+ */
+describe('passwordChange', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        confirm_password: 'password',
+        new_password: 'newpassword',
+      },
+      decoded: { id: '1' },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+  afterEach(async () => {
+    let encrypted_pw = await bcrypt.hash('password', 10);
+    await User.update({ password: encrypted_pw }, { where: { id: '1' } });
+    jest.clearAllMocks();
+  });
+
+  //비밀번호 변경 성공
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`password changed`)}`, async () => {
+    await user.editPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'Password changed.',
+        data: expect.objectContaining({
+          id: 1,
+          user_name: 'test_user',
+          email: 'test_user@example.com',
+        }),
+      }),
+    );
+  });
+
+  //비밀번호 변경 실패 (비밀번호 오류)
+  test(`should return ${chalk.yellow(401)} if ${chalk.blue(`incorrect password`)}`, async () => {
+    req.body.confirm_password = 'differentpassword';
+    await user.editPassword(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: 'No detail.',
+      message: 'Incorrect password.',
+    });
+  });
+
+  //비밀번호 변경 실패 (프로필 조회 실패)
+  test(`should return ${chalk.yellow(404)} if ${chalk.blue(`can not find profile`)}`, async () => {
+    req.decoded.id = 0;
+    await user.editPassword(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      detail: 'No detail.',
+      message: 'Can not find profile.',
+    });
   });
 });
