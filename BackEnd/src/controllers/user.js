@@ -223,6 +223,35 @@ const editPassword = async (req, res) => {
 };
 
 /**
+ * email을 받아 확인후 새로운 비밀번호 만들어 메일전송
+ * @param {string} email 사용자가 입력한 기존 비밀번호
+ */
+const forgotPassword = async (req, res) => {
+  let { email } = req.body;
+  try {
+    let user = await user.findUser('email', email, 0);
+    if (!user) {
+      throw new Error('Services error.'); // service에서 email 찾았지만 controller로 받아오지 못함
+    } else {
+      //난수생성
+      //비밀번호 변경
+      //email 보내기
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 404;
+        break;
+
+      default:
+        code = 500;
+        break;
+    }
+  }
+};
+
+/**
  * 로그인 페이지를 렌더링한다.
  */
 const viewLogin = (req, res) => {
@@ -263,6 +292,13 @@ const viewChangePassword = (req, res) => {
   res.render('user/password');
 };
 
+/**
+ * 비밀번호 찾기페이지를 렌더링한다.
+ */
+const viewForgotPassword = (req, res) => {
+  res.render('user/forgot');
+};
+
 module.exports = {
   postLogin,
   postRegister,
@@ -271,9 +307,11 @@ module.exports = {
   postAttendance,
   getAttendance,
   editPassword,
+  forgotPassword,
   viewLogin,
   viewRegister,
   viewProfile,
   viewAttend,
   viewChangePassword,
+  viewForgotPassword,
 };

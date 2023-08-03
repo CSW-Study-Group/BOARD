@@ -72,6 +72,8 @@ router.patch(
   ],
   ctrl.editPassword);
 
+router.post('/profile/forgot', /*[],*/ ctrl.forgotPassword);
+
 // token refresh
 router.get('/token/refresh', issuanceToken);
 
@@ -81,5 +83,6 @@ router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
 router.get('/profile/password', ctrl.viewChangePassword);
+router.get('/profile/forgot', ctrl.viewForgotPassword);
 
 module.exports = router;
