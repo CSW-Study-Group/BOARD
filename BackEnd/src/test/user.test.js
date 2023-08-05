@@ -9,6 +9,7 @@ const user = require('../controllers/user');
 const { path, config, chalk } = require('../../loaders/module');
 
 const bcrypt = require('bcrypt');
+//const { describe } = require('../models/user');
 
 /**
  * * 로그인 테스트
@@ -537,4 +538,56 @@ describe('passwordChange', () => {
       message: 'Can not find profile.',
     });
   });
+});
+
+/**
+ * *비밀번호 찾기 테스트
+ * 1. 임시 비밀번호 전송 선공
+ * 2. 프로필 조회 실패
+ * 3. 비밀번호 변경 실패
+ * 4. 메일 전송 실패
+ */
+describe('resetPassword', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        email: 'test_user@example.com',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+  afterEach(async () => {
+    let encrypted_pw = await bcrypt.hash('password', 10);
+    await User.update({ password: encrypted_pw }, { where: { id: '1' } });
+    jest.clearAllMocks();
+  });
+
+  //임시 비밀번호 전송 성공
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`password changed`)}`, async () => {
+    await user.resetPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      code: 200,
+      message: 'Mail send success.',
+      data: 'No data.',
+    });
+  });
+
+  //프로필 조회 실패
+  test(`should return ${chalk.yellow(404)} if ${chalk.blue(`Can not find profile.`)}`, async () => {
+    req.body.email = 'different_user@example.com';
+    await user.resetPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Can not find profile.',
+      detail: 'No detail.',
+    });
+  });
+  //비밀번호 변경 실패 (에러 케이스 확인 필요)
+  //메일전송 실패 (에러 케이스 확인 필요) 1. 메일비밀번호 오류등, API 관련 에러
 });

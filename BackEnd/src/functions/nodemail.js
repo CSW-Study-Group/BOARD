@@ -13,7 +13,6 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.passwordMail = async (email, password) => {
-    console.log('mailer');
     let mailOptions = {
         from: sender_info,
         to: email,

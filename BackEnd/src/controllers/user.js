@@ -250,10 +250,7 @@ const resetPassword = async (req, res) => {
             case 'Can not find profile.':
                 code = 404;
                 break;
-            case 'Mail send error.':
-                code = 999; // 에러코드 확인하기
-                break;
-            case 'Password changed failed.' || 'Password changed failePassword rollback failed.':
+            case 'Password changed failed.':
                 code = 999; // 에러코드 확인하기
                 break;
             case 'Mail send fail.':
