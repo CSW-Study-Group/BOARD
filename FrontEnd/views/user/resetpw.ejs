@@ -9,23 +9,18 @@
     <%- include('../partials/nav') %>
 
     <div class="container mb-3">
-        <h3 class="contentBoxTop mb-3">Log In</h3>
+        <h3 class="contentBoxTop mb-3">Reset Password</h3>
 
         <form>
             <div class="mb-3">
-                <label for="email" class="form-label">Id (email)</label>
+                <label for="email" class="form-label">Id (email) * email로 임시 비밀번호를 보내드립니다. *</label>
                 <input type="email" class="form-control" id="email" placeholder="Input email" aria-describedby="emailHelp">
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" placeholder="Input password">
-            </div>
             <button type="button" class="btn btn-secondary" id="button">Submit</button>
-            <a href="/user/resetPW"> forgot your password?</a>
         </form>
     </div>
 
-    <script src="/js/user/login.js" defer></script>
+    <script src="/js/user/resetpw.js" defer></script>
 </body>
 
 </html>

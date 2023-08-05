@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 
 const { accessToken, refreshToken } = require('../functions/signJWT');
 const bcrypt = require('bcrypt');
+const random = require('crypto');
 
 /**
  * 사용자 검색 후 return
@@ -238,6 +239,29 @@ const updatePassword = async (user_id, confirm_password, new_password) => {
   }
 };
 
+/**
+ *  id 입력받아 임시비밀번호 생성 후 변경
+ * @param {number} user_id
+ *
+ * @returns {Object} { message: string, data : DBdata }
+ */
+const tempPassword = async (user_id) => {
+  //난수 생성
+  let temp_pw = parseInt(random.randomBytes(6).toString('hex'), 16).toString(36);
+  const encrypted_pw = await bcrypt.hash(temp_pw, 10);
+  const update = await User.update(
+    { password: encrypted_pw },
+    {
+      where: { id: user_id },
+    },
+  );
+  if (update) {
+    return temp_pw;
+  } else {
+    throw new Error('Password changed failed.');
+  }
+};
+
 module.exports = {
   findUser,
   createUser,
@@ -248,4 +272,5 @@ module.exports = {
   createAttendance,
   findAttendanceDate,
   updatePassword,
+  tempPassword,
 };
