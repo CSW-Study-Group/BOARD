@@ -72,7 +72,14 @@ router.patch(
   ],
   ctrl.editPassword);
 
-router.post('/resetPW', /*[],*/ ctrl.resetPassword);
+router.post('/resetPW', [
+  check('email')
+    .isEmail()
+    .withMessage('Email must be in the correct format.')
+    .isLength({ max: 30 })
+    .withMessage('Email must be shorter than 31 characters.'),
+  validator,
+], ctrl.resetPassword);
 
 // token refresh
 router.get('/token/refresh', issuanceToken);
