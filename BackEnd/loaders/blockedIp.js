@@ -5,13 +5,28 @@ const blockedIP = require('../src/services/blockedIp');
 
 const blocked_ip = [];
 
-const detectAttack = (searchText) => {
+const detectAttack = (input) => {
   // 서버 공격 패턴
   const xss_patterns = [/<script>/i, /<img src=/i, /onmouseover=/i, /javascript:/i];
   const injection_patterns = [/SELECT\s*.*\s*FROM/i, /INSERT\s+INTO/i, /UPDATE\s+.*\s+SET/i, /DELETE\s+FROM/i];
 
-  const patterns = [...xss_patterns, ...injection_patterns];
-  return patterns.some((pattern) => pattern.test(searchText));
+  for (const key in input) {
+    if (typeof input[key] === 'string') {
+      for (const pattern of xss_patterns) {
+        if (pattern.test(input[key])) {
+          return true; // XSS attack detected.
+        }
+      }
+
+      for (const pattern of injection_patterns) {
+        if (pattern.test(input[key])) {
+          return true; // SQL injection attack detected.
+        }
+      }
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -39,7 +54,7 @@ const ipCheck = (req, res, next) => {
 
 const ipBlock = (req, res, next) => {
   try {
-    if (detectAttack(req.query.searchText) || detectAttack(req.body.content) || detectAttack(req.body.title)) {
+    if (detectAttack(req.query) || detectAttack(req.body)) {
       blocked_ip.push(req.headers['x-forwarded-for']);
       // 차단된 IP 주소를 Blocked_ip 모델에 저장합니다
       blockedIP.postBlockedIp(req.headers['x-forwarded-for']);

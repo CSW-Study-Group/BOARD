@@ -11,6 +11,7 @@ const config = require('config');
 const methodOverride = require('method-override');
 
 const sentry = require('@sentry/node'); // monitoring
+const helmet = require('helmet'); // security
 
 // etc
 const chalk = require('chalk');
@@ -23,5 +24,6 @@ module.exports = {
   config,
   methodOverride,
   sentry,
+  helmet,
   chalk
 };
