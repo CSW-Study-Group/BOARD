@@ -5,7 +5,7 @@ const user = require('../services/user');
 const { success, fail } = require('../functions/responseStatus');
 
 const { startDate, endDate, todayDate, firstDay } = require('../functions/common');
-const { passowrdMail, passwordMail } = require('../functions/nodemail');
+const { verifycodeMail } = require('../functions/nodemail');
 
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
@@ -191,27 +191,26 @@ const getAttendance = async (req, res) => {
 };
 
 /**
- * 현재 비밀번호, 새 비밀번호, 비밀번호 확인 입력받아 비밀번호 변경
- * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
- * @param {string} new_password 새 비밀번호
+ * 비밀번호 재확인
+ * @param {string} confirm_password 기존 비밀번호
+ * 
  */
-const editPassword = async (req, res) => {
-    let { confirm_password, new_password } = req.body;
+const checkPassword = async (req, res) => {
+    let { confirm_password } = req.body;
     let user_id = req.decoded.id;
     try {
-        let result = await user.updatePassword(user_id, confirm_password, new_password);
-        if (result.message === 'Password changed.') {
-            let data = result.user;
-            return success(res, 200, result.message, data);
-        } else {
-            throw new Error('Services error.');
+        //비밀번호 확인
+        let result = await user.comparePassword(confirm_password, user_id);
+        if (result) {
+            //일회성 토큰 발급
+            await user.issueOneTimeToken(result).then((data) => {
+                let token = data;
+                return success(res, 200, 'Authorize success.', token);
+            });
         }
     } catch (err) {
         let code;
         switch (err.message) {
-            case 'Can not find profile.':
-                code = 404;
-                break;
             case 'Incorrect password.':
                 code = 401;
                 break;
@@ -224,25 +223,55 @@ const editPassword = async (req, res) => {
 };
 
 /**
- * email을 받아 확인후 새로운 비밀번호 만들어 메일전송
+ * 새 비밀번호 입력받아 비밀번호 변경
+ * @param {string} new_password 새 비밀번호
+ */
+const editPassword = async (req, res) => {
+    let { new_password } = req.body;
+    let user_id = req.decoded.id;
+    try {
+        if (req.decoded.type !== 'OneTimeJWT') { throw new Error('token is invalid.'); }
+        let result = await user.updatePassword(user_id, new_password);
+        if (result.message === 'Password changed.') {
+            let data = result.user;
+            return success(res, 200, result.message, data);
+        } else {
+            throw new Error('Services error.');
+        }
+    } catch (err) {
+        let code;
+        switch (err.message) {
+            case 'token is invalid.':
+                code = 403;
+                break;
+            case 'Can not find profile.':
+                code = 404;
+                break;
+            default:
+                code = 500;
+                break;
+        }
+        return fail(res, code, err.message);
+    }
+};
+
+/**
+ * email을 받아 확인후 인증번호 메일전송
  * @param {string} email 사용자가 입력한 기존 비밀번호
  */
-const resetPassword = async (req, res) => {
-    let { email } = req.body;
-    let password;
+const sendVerifyEmail = async (req, res) => {
+    let { email } = req.body
     try {
-
-        let user_info = await user.findUser('email', email, 0);
-        if (!user_info) {
-            throw new Error('Services error.'); // service에서 email 찾았지만 controller로 받아오지 못함
+        let result = await user.findUser('email', email, 0);
+        if (result) {
+            // 인증번호, 캐시저장
+            let verifycode = await user.verifycode(email);
+            console.log(verifycode); // 임시
+            //인증번호 전송 메일 (비동기)
+            verifycodeMail(email, verifycode);
+            return success(res, 200);
         } else {
-            //임시 비밀번호 생성 후 변경
-            password = await user.tempPassword(user_info.id);
-            //email 보내기
-            let result = await passwordMail(email, password);
-            if (result === 'Mail send success.') {
-                return success(res, 200, result);
-            } else { throw new Error(result); }
+            throw new Error('Services error.');
         }
     } catch (err) {
         let code;
@@ -250,12 +279,39 @@ const resetPassword = async (req, res) => {
             case 'Can not find profile.':
                 code = 404;
                 break;
-            case 'Password changed failed.':
-                code = 999; // 에러코드 확인하기
+            default:
+                code = 500;
                 break;
-            case 'Mail send fail.':
-                code = 999; // 에러코드 확인하기
-                // 비밀번호 롤백이 필요한지
+        }
+        return fail(res, code, err.message);
+    }
+};
+
+
+/**
+ * 이메일, 인증번호 입력받아 확인 후 새 비밀번호 페이지로 넘겨줌
+ * @param {string} email 사용자가 입력한 기존 비밀번호
+ * @param {number} verifycode 입력한 인증번호
+ */
+const checkVerifyCode = async (req, res) => {
+    let { email, verifycode } = req.body
+    try {
+        //인증번호 확인
+        let result = user.checkCode(email, verifycode);
+        //새비밀번호 페이지로 넘기기
+        if (result) {
+            //일회성 토큰 발급
+            await user.issueOneTimeToken(email).then((data) => {
+                let token = data;
+                return success(res, 200, 'Authorize success.', token);
+            });
+        }
+    } catch (err) {
+        let code;
+        switch (err.message) {
+            case 'Code dosesn\'t match.': //401이나 403?
+            case 'Verifycode expired.':
+                code = 409;
                 break;
             default:
                 code = 500;
@@ -300,17 +356,24 @@ const viewAttend = (req, res) => {
 };
 
 /**
- * 비밀번호 변경페이지를 렌더링한다.
+ * 비밀번호 확인페이지를 렌더링한다.
  */
-const viewChangePassword = (req, res) => {
-    res.render('user/password');
+const viewVerifyPassword = (req, res) => {
+    res.render('user/verifyPassword');
 };
 
 /**
- * 비밀번호 찾기페이지를 렌더링한다.
+ * 비밀번호 변경페이지를 렌더링한다.
  */
-const viewResetPassword = (req, res) => {
-    res.render('user/resetpw');
+const viewChangePassword = (req, res) => {
+    res.render('user/newPassword');
+};
+
+/**
+ * 메일 인증페이지를 렌더링한다.
+ */
+const viewverifyEmail = (req, res) => {
+    res.render('user/verifyEmail');
 };
 
 module.exports = {
@@ -320,12 +383,15 @@ module.exports = {
     updateProfile,
     postAttendance,
     getAttendance,
+    checkPassword,
     editPassword,
-    resetPassword,
+    sendVerifyEmail,
+    checkVerifyCode,
     viewLogin,
     viewRegister,
     viewProfile,
     viewAttend,
+    viewVerifyPassword,
     viewChangePassword,
-    viewResetPassword,
+    viewverifyEmail,
 };

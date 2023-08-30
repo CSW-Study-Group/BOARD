@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('../partials/head') %>
+</head>
+
+<body>
+    <%- include('../partials/nav') %>
+
+    <div class="container mb-3">
+        <h3 class="contentBoxTop mb-3">Reset Password</h3>
+
+        <form>
+            <div class="mb-3">
+                <label for="email" class="form-label">Id (email) *Send verification code by email*</label>
+                <input type="email" class="form-control" id="email" placeholder="Input email" aria-describedby="emailHelp">
+            </div>
+            <button type="button" class="btn btn-secondary" id="email_button">Send</button>
+        </form>
+    </div>
+    <div id="verify" style="display: none" class="container mb-3">
+        <form>
+            <div class="mb-3">
+                check your Email.
+                <input id="timer" style="width: auto;" type="text" value="" readonly/>
+                <label for="verifycode" class="form-label"></label>
+                <input type="verifycode" class="form-control" id="verifycode" placeholder="Input code">
+            </div>
+            <button type="button" class="btn btn-secondary" id="submit_button">Submit</button>
+        </form>
+    </div>
+
+    <script src="/js/user/verifyEmail.js" defer></script>
+</body>
+
+</html>

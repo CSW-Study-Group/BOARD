@@ -21,6 +21,13 @@ const refreshToken = (payload) => {
   });
 };
 
+const oneTimeToken = (payload) => {
+  return jwt.sign(payload, access_secret_key, {
+    expiresIn: '5m',
+    issuer: config.get('JWT.issuer'),
+  });
+};
+
 const issuanceToken = (req, res) => {
   return jwt.verify(req.headers.authorization, refresh_secret_key, (err, decoded) => {
     if (err) {
@@ -41,5 +48,6 @@ const issuanceToken = (req, res) => {
 module.exports = {
   accessToken,
   refreshToken,
+  oneTimeToken,
   issuanceToken,
 };

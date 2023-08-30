@@ -3,9 +3,12 @@
 const { User, Attendance } = require('../utils/connect');
 const { Op } = require('sequelize');
 
-const { accessToken, refreshToken } = require('../functions/signJWT');
+const { accessToken, refreshToken, oneTimeToken } = require('../functions/signJWT');
 const bcrypt = require('bcrypt');
 const random = require('crypto');
+
+const cache = require('memory-cache');
+
 
 /**
  * 사용자 검색 후 return
@@ -207,15 +210,13 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
 };
 
 /**
- *  비밀번호 입력받아 확인 후, 비밀번호 변경
+ *  비밀번호 확인
+ * @param {string} confirm_password 비밀번호
  * @param {number} user_id
- * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
- * @param {string} new_password 새 비밀번호
  *
- * @returns {Object} { message: string, data : DBdata }
+ * @returns {string} email 
  */
-const updatePassword = async (user_id, confirm_password, new_password) => {
-  let message = '';
+const comparePassword = async (confirm_password, user_id) => {
   const user = await User.findByPk(user_id);
   if (user === null) {
     throw new Error('Can not find profile.');
@@ -223,6 +224,23 @@ const updatePassword = async (user_id, confirm_password, new_password) => {
   const match = await bcrypt.compare(confirm_password, user.password);
   if (!match) {
     throw new Error('Incorrect password.');
+  } else {
+    return user.email;
+  }
+};
+
+/**
+ * 비밀번호 변경
+ * @param {number} user_id
+ * @param {string} new_password 새 비밀번호
+ *
+ * @returns {Object} { message: string, data : DBdata }
+ */
+const updatePassword = async (user_id, new_password) => {
+  let message = '';
+  const user = await User.findByPk(user_id);
+  if (user === null) {
+    throw new Error('Can not find profile.');
   }
   const encrypted_pw = await bcrypt.hash(new_password, 10);
   const data = await User.update(
@@ -240,27 +258,51 @@ const updatePassword = async (user_id, confirm_password, new_password) => {
 };
 
 /**
- *  id 입력받아 임시비밀번호 생성 후 변경
- * @param {number} user_id
+ * email을 입력 받아 인증번호 생성 후 캐시메모리에 저장
+ * @param {string} email
  *
- * @returns {Object} { message: string, data : DBdata }
+ * @returns {string} code
  */
-const tempPassword = async (user_id) => {
-  //난수 생성
-  let temp_pw = parseInt(random.randomBytes(6).toString('hex'), 16).toString(36);
-  const encrypted_pw = await bcrypt.hash(temp_pw, 10);
-  const update = await User.update(
-    { password: encrypted_pw },
-    {
-      where: { id: user_id },
-    },
-  );
-  if (update) {
-    return temp_pw;
+const verifycode = (email) => {
+  let code = parseInt(random.randomBytes(2).toString('hex'), 16).toString(10);
+  //캐시메모리에 저장 (캐시 메모리 너무 많이 쌓이는 경우?)
+  cache.put(email, code, 300000, (key, value) => {
+    console.log('key: ' + key + ' value: ' + value + ' timeout'); // 로그로 변경필요
+  }); // key: email, value: code, 300000ms (5min) 후 삭제
+  return code;
+};
+
+/**
+ * 인증번호 체크
+ * @param {string} email
+ * @param {number} verifycode
+ * 
+ * @returns {boolean} 
+ */
+const checkCode = (email, verifycode) => {
+  let cachecode = cache.get(email);
+  if (cachecode) {
+    if (parseInt(verifycode) !== parseInt(cachecode)) {
+      throw new Error('Code dosesn\'t match.');
+    } else {
+      return true;
+    }
   } else {
-    throw new Error('Password changed failed.');
+    throw new Error('Verifycode expired.');
   }
 };
+
+/**
+ * 일회용 토큰 발급
+ * @param {string} email
+ * 
+ * @returns {object} data
+ */
+const issueOneTimeToken = async (email) => {
+  let user = await findUser('email', email, 1);
+  let one_time_access_token = await oneTimeToken({ type: 'OneTimeJWT', id: user.id });
+  return one_time_access_token;
+}
 
 module.exports = {
   findUser,
@@ -271,6 +313,9 @@ module.exports = {
   findAttendance,
   createAttendance,
   findAttendanceDate,
+  comparePassword,
   updatePassword,
-  tempPassword,
+  verifycode,
+  checkCode,
+  issueOneTimeToken,
 };

@@ -12,15 +12,16 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-exports.passwordMail = async (email, password) => {
+exports.verifycodeMail = async (email, code) => {
     let mailOptions = {
         from: sender_info,
         to: email,
-        subject: 'Temporary Password by CSW_BOARD',
-        text: `Your temporary password is ${password}.`
-    };;
+        subject: 'Verifying Code by CSW_BOARD',
+        text: `Your Verifycode is ${code}.`
+    };
     let send = await transporter.sendMail(mailOptions);
     if (send) {
+        console.log('send OK');
         return 'Mail send success.'
     } else {
         throw new Error('Mail send fail.');

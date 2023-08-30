@@ -2,14 +2,13 @@
 
 const pw_change_btn = document.querySelector("#pw_change_btn");
 
-pw_change_btn.addEventListener("click", passwordPatch);
+pw_change_btn.addEventListener("click", newPassword);
 
-function passwordPatch() {
-    const confirm_password = document.getElementsByName("old_password")[0].value;
+function newPassword() {
     const new_password = document.getElementsByName("new_password")[0].value;
     const new_password_confirm = document.getElementsByName("new_password_confirm")[0].value;
 
-    if (!(confirm_password && new_password && new_password_confirm)) {
+    if (!(new_password && new_password_confirm)) {
         return alert("Please input password.");
     } else if (new_password !== new_password_confirm) {
         return alert("confirm password does not match.");
@@ -18,15 +17,14 @@ function passwordPatch() {
     }
 
     const req = {
-        confirm_password: confirm_password,
         new_password: new_password,
     };
 
-    fetch("/user/profile/password", {
+    fetch("/user/newPassword", {
         method: 'PATCH',
         headers: {
             'content-type': 'application/json',
-            authorization: localStorage.getItem('access_token')
+            authorization: localStorage.getItem('one_time_access_token')
         },
         body: JSON.stringify(req)
     }).then((res) => res.json())

@@ -62,24 +62,42 @@ router.patch(
 router.post('/attendance', auth, ctrl.postAttendance);
 router.get('/attendance', auth, ctrl.getAttendance);
 
-router.patch(
-  '/profile/password',
+router.post(
+  '/verifyPassword',
   auth,
   [
-    check('confirm_password', 'Please input password.').notEmpty(),
-    check('new_password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    check('confirm_password', 'Password must be shorter than 101 characters.').isLength({ max: 100 }),
     validator,
   ],
-  ctrl.editPassword);
+  ctrl.checkPassword);
 
-router.post('/resetPW', [
+router.post('/sendEmail', [
   check('email')
     .isEmail()
     .withMessage('Email must be in the correct format.')
     .isLength({ max: 30 })
     .withMessage('Email must be shorter than 31 characters.'),
   validator,
-], ctrl.resetPassword);
+], ctrl.sendVerifyEmail);
+
+router.post('/verifyEmail', [
+  check('email')
+    .isEmail()
+    .withMessage('Email must be in the correct format.')
+    .isLength({ max: 30 })
+    .withMessage('Email must be shorter than 31 characters.'),
+  check('verifycode', 'Please input code.').notEmpty(),
+  validator,
+], ctrl.checkVerifyCode);
+
+router.patch(
+  '/newPassword',
+  auth,
+  [
+    check('new_password', 'Password must be longer than 2 characters & shorter than 101 characters.').isLength({ min: 3, max: 100 }),
+    validator,
+  ],
+  ctrl.editPassword);
 
 // token refresh
 router.get('/token/refresh', issuanceToken);
@@ -89,7 +107,9 @@ router.get('/login', ctrl.viewLogin);
 router.get('/register', ctrl.viewRegister);
 router.get('/profile/output/', ctrl.viewProfile);
 router.get('/attendance/output', ctrl.viewAttend);
-router.get('/profile/password', ctrl.viewChangePassword);
-router.get('/resetPW', ctrl.viewResetPassword);
+router.get('/verifyPassword', ctrl.viewVerifyPassword); // 비밀번호 확인 페이지 
+router.get('/verifyEmail', ctrl.viewverifyEmail); // 인증번호 보내고 체크하는 페이지
+router.get('/newPassword', ctrl.viewChangePassword); // 비밀번호 변경 페이지
+
 
 module.exports = router;
