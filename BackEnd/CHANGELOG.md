@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/CSW-Study-Group/BOARD/compare/v1.6.1...v1.6.2) (2023-08-10)
+
+
+### Features
+
+* helmet모듈 & ip차단 함수 강화 ([1e23bf4](https://github.com/CSW-Study-Group/BOARD/commit/1e23bf432ef0165b2cb6a045760ce48195cf72a8))
+
+
+### Bug Fixes
+
+* dayjs 모듈 캐싱 문제 ([8b20f94](https://github.com/CSW-Study-Group/BOARD/commit/8b20f94b505695c3cfd507d215e92bd19baf0b13))
+
 ### [1.6.1](https://github.com/CSW-Study-Group/BOARD/compare/v1.6.0...v1.6.1) (2023-07-26)
 
 
