@@ -5,6 +5,7 @@ const user = require('../services/user');
 const { success, fail } = require('../functions/responseStatus');
 
 const { startDate, endDate, todayDate, firstDay } = require('../functions/common');
+const { verifycodeMail } = require('../functions/nodemail');
 
 /**
  * 제공된 이메일과 비밀번호로 로그인을 시도하고, 성공하면 토큰을 발급한다.
@@ -143,7 +144,7 @@ const updateProfile = async (req, res) => {
 
 /**
  * 사용자의 id로 오늘 출석 했는지를 조회합니다.
- *  @param {number} id
+ * @param {number} id
  * @returns {object} { code: number, message: string }
  * 출석했다면 409을 반환
  * 출석하지 않았다면 출석 체크를 하고 200반환
@@ -190,15 +191,53 @@ const getAttendance = async (req, res) => {
 };
 
 /**
- * 현재 비밀번호, 새 비밀번호, 비밀번호 확인 입력받아 비밀번호 변경
- * @param {string} confirm_password 사용자가 입력한 기존 비밀번호
+ * 비밀번호 재확인
+ * @param {string} confirm_password 기존 비밀번호
+ *
+ */
+const checkPassword = async (req, res) => {
+  let { confirm_password } = req.body;
+  let user_id = req.decoded.id;
+  try {
+    //비밀번호 확인
+    let result = await user.comparePassword(confirm_password, user_id);
+    if (result) {
+      //일회성 토큰 발급
+      await user.issueOneTimeToken(result).then((data) => {
+        let token = data;
+        return success(res, 200, 'Authorize success.', token);
+      });
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Incorrect password.':
+        code = 401;
+        break;
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
+};
+
+/**
+ * 새 비밀번호 입력받아 비밀번호 변경
  * @param {string} new_password 새 비밀번호
  */
 const editPassword = async (req, res) => {
-  let { confirm_password, new_password } = req.body;
+  let { new_password } = req.body;
   let user_id = req.decoded.id;
+  //console.log(req.headers.authorization);
   try {
-    let result = await user.updatePassword(user_id, confirm_password, new_password);
+    if (req.decoded.type !== 'OneTimeJWT') {
+      throw new Error('token is invalid.');
+    }
+    let result = await user.updatePassword(user_id, new_password);
     if (result.message === 'Password changed.') {
       let data = result.user;
       return success(res, 200, result.message, data);
@@ -208,11 +247,76 @@ const editPassword = async (req, res) => {
   } catch (err) {
     let code;
     switch (err.message) {
+      case 'token is invalid.':
+        code = 403; // 403일 경우 위치 변경
+        break;
       case 'Can not find profile.':
         code = 404;
         break;
-      case 'Incorrect password.':
-        code = 401;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
+};
+
+/**
+ * email을 받아 확인후 인증번호 메일전송
+ * @param {string} email 사용자가 입력한 기존 비밀번호
+ */
+const sendVerifyEmail = async (req, res) => {
+  let { email } = req.body;
+  try {
+    let result = await user.findUser('email', email, 0);
+    if (result) {
+      // 인증번호, 캐시저장
+      let verifycode = await user.verifycode(email);
+      console.log(verifycode); // 임시
+      //인증번호 전송 메일 (비동기)
+      verifycodeMail(email, verifycode);
+      return success(res, 200);
+    } else {
+      throw new Error('Services error.');
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
+};
+
+/**
+ * 이메일, 인증번호 입력받아 확인
+ * @param {string} email 사용자가 받는데 사용한 이메일
+ * @param {number} verifycode 입력한 인증번호
+ */
+const checkVerifyCode = async (req, res) => {
+  let { email, verifycode } = req.body;
+  try {
+    //인증번호 확인
+    let result = user.checkCode(email, verifycode);
+    //새비밀번호 페이지로 넘기기
+    if (result) {
+      //일회성 토큰 발급
+      await user.issueOneTimeToken(email).then((data) => {
+        let token = data;
+        return success(res, 200, 'Authorize success.', token);
+      });
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case "Code dosesn't match.": //401이나 403?
+      case 'Verifycode expired.':
+        code = 409;
         break;
       default:
         code = 500;
@@ -257,10 +361,24 @@ const viewAttend = (req, res) => {
 };
 
 /**
+ * 비밀번호 확인페이지를 렌더링한다.
+ */
+const viewVerifyPassword = (req, res) => {
+  res.render('user/verifyPassword');
+};
+
+/**
  * 비밀번호 변경페이지를 렌더링한다.
  */
 const viewChangePassword = (req, res) => {
-  res.render('user/password');
+  res.render('user/newPassword');
+};
+
+/**
+ * 메일 인증페이지를 렌더링한다.
+ */
+const viewverifyEmail = (req, res) => {
+  res.render('user/verifyEmail');
 };
 
 module.exports = {
@@ -270,10 +388,15 @@ module.exports = {
   updateProfile,
   postAttendance,
   getAttendance,
+  checkPassword,
   editPassword,
+  sendVerifyEmail,
+  checkVerifyCode,
   viewLogin,
   viewRegister,
   viewProfile,
   viewAttend,
+  viewVerifyPassword,
   viewChangePassword,
+  viewverifyEmail,
 };

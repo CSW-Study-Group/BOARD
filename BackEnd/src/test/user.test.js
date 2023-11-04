@@ -8,7 +8,7 @@ const user = require('../controllers/user');
 
 const { path, config, chalk } = require('../../loaders/module');
 
-const bcrypt = require('bcrypt');
+const cache = require('memory-cache');
 
 /**
  * * 로그인 테스트
@@ -469,72 +469,269 @@ describe('getAttendance', () => {
   });
 });
 
+// 비밀번호 변경 테스트
 /**
- * *비밀번호 변경 테스트
- * 1. 비밀번호 변경 성공
- * 2. 비밀번호 변경 실패 (비밀번호 에러)
+ * 비밀번호 인증 테스트
+ * 1. 비밀번호 인증 완료
+ * 2. 비밀번호 에러
  * 3. 프로필 조회 실패
  */
-describe('passwordChange', () => {
-  let req, res;
+describe('checkPassword', () => {
+  let req, res, server;
+
+  beforeAll(() => {
+    server = app.listen(config.get('server.port'));
+  });
+
+  afterAll((done) => {
+    server.close(done);
+  });
 
   beforeEach(() => {
     req = {
+      decoded: { id: 1 },
       body: {
         confirm_password: 'password',
-        new_password: 'newpassword',
       },
-      decoded: { id: '1' },
     };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
   });
-  afterEach(async () => {
-    let encrypted_pw = await bcrypt.hash('password', 10);
-    await User.update({ password: encrypted_pw }, { where: { id: '1' } });
-    jest.clearAllMocks();
+
+  // 비밀번호 인증 완료
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`password authorize success`)}`, async () => {
+    await user.checkPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'Authorize success.',
+        data: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
+      }),
+    );
   });
 
-  //비밀번호 변경 성공
-  test(`should return ${chalk.green(200)} if ${chalk.blue(`password changed`)}`, async () => {
+  // 비밀번호 에러
+  test(`should return ${chalk.yellow(401)} if ${chalk.blue(`password is incorrect`)}`, async () => {
+    req.body.confirm_password = 'notpassword';
+    await user.checkPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Incorrect password.',
+      detail: 'No detail.',
+    });
+  });
+
+  // 프로필 조회 실패
+  test(`should return ${chalk.yellow(404)} if ${chalk.blue(`Can not find profile`)}`, async () => {
+    req.decoded.id = 6974;
+    await user.checkPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Can not find profile.',
+      detail: 'No detail.',
+    });
+  });
+});
+
+/**
+ * 이메일 인증 테스트
+ * 인증번호 발송 테스트
+ * 1. 인증번호 발송 완료
+ * 2. 프로필 조회 실패
+ */
+jest.mock('../functions/nodemail');
+describe('sendVerifyEmail', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        email: 'test_user@example.com',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  // 인증번호 발송 완료
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`email send success`)}`, async () => {
+    await user.sendVerifyEmail(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'No message.',
+        data: 'No data.',
+      }),
+    );
+  });
+
+  // 프로필 조회 실패
+  test(`should return ${chalk.yellow(404)} if ${chalk.blue(`Can not find profile`)}`, async () => {
+    req.body.email = 'notmail@example.com';
+    await user.sendVerifyEmail(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Can not find profile.',
+      detail: 'No detail.',
+    });
+  });
+});
+
+/**
+ * 이메일 인증 테스트
+ * 인증번호 확인 테스트
+ * 1. 인증번호 확인 완료
+ * 2. 인증번호 에러
+ * 3. 인증번호 만료
+ */
+describe('checkVerifyCode', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        email: 'test_user@example.com',
+        verifycode: '12345',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    cache.put('test_user@example.com', 12345);
+  });
+
+  afterEach(() => {
+    cache.clear();
+  });
+
+  // 인증번호 확인 완료
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`email authorize success`)}`, async () => {
+    await user.checkVerifyCode(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 200,
+        message: 'Authorize success.',
+        data: expect.stringMatching(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]+$/),
+      }),
+    );
+  });
+
+  // 인증번호 에러
+  test(`should return ${chalk.yellow(409)} if ${chalk.blue(`code is incorrect`)}`, async () => {
+    req.body.verifycode = 6974;
+    await user.checkVerifyCode(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Code dosesn't match.",
+      detail: 'No detail.',
+    });
+  });
+
+  // 인증번호 만료
+  test(`should return ${chalk.yellow(409)} if ${chalk.blue(`verifycode is expired`)}`, async () => {
+    cache.del('test_user@example.com');
+    await user.checkVerifyCode(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Verifycode expired.',
+      detail: 'No detail.',
+    });
+  });
+});
+
+/**
+ * 비밀번호 변경 테스트
+ * 1. 비밀번호 변경 성공
+ * 2. 프로필 조회 실패
+ * 3. 비밀번호 변경 실패 (시간 만료)
+ */
+describe('newPassword', () => {
+  let req, res, token, server;
+
+  beforeAll(async () => {
+    server = app.listen(config.get('server.port'));
+
+    //캐시생성
+    cache.put('test_user@example.com', 12345);
+
+    // 인증하여 토큰발급
+    const res = await request(app)
+      .post('/user/verifyEamil')
+      .send({ email: 'test_user@example.com', verifycode: 12345 });
+    token = res.body.data;
+  });
+
+  afterAll((done) => {
+    cache.clear();
+    server.close(done);
+  });
+
+  beforeEach(() => {
+    req = {
+      decoded: {
+        id: 1,
+        type: 'OneTimeJWT',
+      },
+      body: {
+        new_password: '0000',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  afterEach(async () => {
+    // await request(app)
+    //   .post('/user/newPassword')
+    //   .set('authorization', `${token}`)
+    //   .send({ new_password: 'password' });
+    req.body.new_password = 'password';
+    await user.editPassword(req, res);
+  });
+
+  //비밀번호 변경성공
+  test(`should return ${chalk.green(200)} if ${chalk.blue(`password change success`)}`, async () => {
     await user.editPassword(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         code: 200,
         message: 'Password changed.',
-        data: expect.objectContaining({
-          id: 1,
-          user_name: 'test_user',
-          email: 'test_user@example.com',
-        }),
       }),
     );
   });
 
-  //비밀번호 변경 실패 (비밀번호 오류)
-  test(`should return ${chalk.yellow(401)} if ${chalk.blue(`incorrect password`)}`, async () => {
-    req.body.confirm_password = 'differentpassword';
-    await user.editPassword(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({
-      detail: 'No detail.',
-      message: 'Incorrect password.',
-    });
-  });
-
-  //비밀번호 변경 실패 (프로필 조회 실패)
+  // 프로필 조회 실패
   test(`should return ${chalk.yellow(404)} if ${chalk.blue(`can not find profile`)}`, async () => {
-    req.decoded.id = 0;
+    req.decoded.id = 6974;
     await user.editPassword(req, res);
-
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
-      detail: 'No detail.',
       message: 'Can not find profile.',
+      detail: 'No detail.',
     });
   });
+
+  // 토큰 만료 (시간이 걸리므로 TDD 어려움)
+  //   test(`should return ${chalk.yellow(403)} if ${chalk.blue(`token is invalid`)}`, async () => {
+  //     token = '';
+  //     await user.editPassword(req, res);
+  //     expect(res.status).toHaveBeenCalledWith(403);
+  //     expect(res.json).toHaveBeenCalledWith(
+  //       {
+  //         message: "Verifycode expired.",
+  //         detail: 'No detail.',
+  //       }
+  //     );
+  //   });
 });
