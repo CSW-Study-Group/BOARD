@@ -16,28 +16,28 @@ const { verifycodeMail } = require('../functions/nodemail');
  * @returns {object} { code: number, message: string, access_token: string, refresh_token: string }
  */
 const postLogin = async (req, res) => {
-    let { email, password } = req.body;
-    try {
-        await user.verifyLogin(email, password).then((data) => {
-            let token = {
-                access_token: data.access_token,
-                refresh_token: data.refresh_token,
-            };
-            return success(res, 200, 'Authorize success.', token);
-        });
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Unauthorized email.':
-            case 'Incorrect password.':
-                code = 401;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { email, password } = req.body;
+  try {
+    await user.verifyLogin(email, password).then((data) => {
+      let token = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      };
+      return success(res, 200, 'Authorize success.', token);
+    });
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Unauthorized email.':
+      case 'Incorrect password.':
+        code = 401;
+        break;
+      default:
+        code = 500;
+        break;
     }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
@@ -52,32 +52,32 @@ const postLogin = async (req, res) => {
  * @returns {object} { code: number, message: string }
  */
 const postRegister = async (req, res) => {
-    let { email, password, user_name } = req.body;
+  let { email, password, user_name } = req.body;
 
-    try {
-        let result = await user.verifyRegister(email, password, user_name);
-        if (result) {
-            user.createUser(email, password, user_name);
-            return success(res, 201, 'Register success.');
-        }
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Exist username.':
-            case 'Exist email.':
-                code = 409;
-                break;
-            case 'Please input username.':
-            case 'Please input id.':
-            case 'Please input password.':
-                code = 400;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  try {
+    let result = await user.verifyRegister(email, password, user_name);
+    if (result) {
+      user.createUser(email, password, user_name);
+      return success(res, 201, 'Register success.');
     }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Exist username.':
+      case 'Exist email.':
+        code = 409;
+        break;
+      case 'Please input username.':
+      case 'Please input id.':
+      case 'Please input password.':
+        code = 400;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
@@ -86,21 +86,21 @@ const postRegister = async (req, res) => {
  * @returns {object} { code: number, data: data }
  */
 const getProfile = async (req, res) => {
-    try {
-        const data = await user.findUser('id', req.decoded.id, 0);
-        return success(res, 200, 'No message', data);
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Can not find profile.':
-                code = 404;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  try {
+    const data = await user.findUser('id', req.decoded.id, 0);
+    return success(res, 200, 'No message', data);
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
     }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
@@ -113,58 +113,58 @@ const getProfile = async (req, res) => {
  *  - username, email 변동없을 시 편집 정상 수행
  */
 const updateProfile = async (req, res) => {
-    let { user_name, email } = req.body;
-    let user_id = req.decoded.id;
-    let data;
-    try {
-        let result = await user.updateUser(user_id, email, user_name, req.file);
-        if (result.message === 'Profile no change.') {
-            data = result.user;
-        } else if (result.message === 'Profile edit success.') {
-            data = result.data;
-        }
-        return success(res, 200, result.message, data);
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Profile type must be only image.':
-                code = 400;
-                break;
-            case 'The username is already in use.':
-            case 'The email is already in use.':
-                code = 409;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { user_name, email } = req.body;
+  let user_id = req.decoded.id;
+  let data;
+  try {
+    let result = await user.updateUser(user_id, email, user_name, req.file);
+    if (result.message === 'Profile no change.') {
+      data = result.user;
+    } else if (result.message === 'Profile edit success.') {
+      data = result.data;
     }
+    return success(res, 200, result.message, data);
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Profile type must be only image.':
+        code = 400;
+        break;
+      case 'The username is already in use.':
+      case 'The email is already in use.':
+        code = 409;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
  * 사용자의 id로 오늘 출석 했는지를 조회합니다.
- *  @param {number} id
+ * @param {number} id
  * @returns {object} { code: number, message: string }
  * 출석했다면 409을 반환
  * 출석하지 않았다면 출석 체크를 하고 200반환
  */
 const postAttendance = async (req, res) => {
-    let user_id = req.decoded.id;
-    const today_date = todayDate();
+  let user_id = req.decoded.id;
+  const today_date = todayDate();
 
-    try {
-        const attendance = await user.findAttendance(user_id, today_date);
+  try {
+    const attendance = await user.findAttendance(user_id, today_date);
 
-        if (attendance) {
-            return fail(res, 409, 'Already checked attendance today.');
-        }
-
-        await user.createAttendance(user_id, today_date);
-        return success(res, 201, 'Attendance check success.');
-    } catch (err) {
-        return fail(res, 500, err.message);
+    if (attendance) {
+      return fail(res, 409, 'Already checked attendance today.');
     }
+
+    await user.createAttendance(user_id, today_date);
+    return success(res, 201, 'Attendance check success.');
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
 };
 
 /**
@@ -172,54 +172,57 @@ const postAttendance = async (req, res) => {
  * @returns {object} { code: number, message: string, data: array }
  */
 const getAttendance = async (req, res) => {
-    try {
-        const user_id = req.decoded.id;
-        const start_date = startDate();
-        const end_date = endDate();
+  try {
+    const user_id = req.decoded.id;
+    const start_date = startDate();
+    const end_date = endDate();
 
-        const attendance_dates = await user.findAttendanceDate(user_id, start_date, end_date);
+    const attendance_dates = await user.findAttendanceDate(user_id, start_date, end_date);
 
-        const data = attendance_dates.map((attendance) => {
-            const date = new Date(attendance.attendance_date);
-            return date.getDate();
-        });
+    const data = attendance_dates.map((attendance) => {
+      const date = new Date(attendance.attendance_date);
+      return date.getDate();
+    });
 
-        return success(res, 200, 'No message.', data);
-    } catch (err) {
-        return fail(res, 500, err.message);
-    }
+    return success(res, 200, 'No message.', data);
+  } catch (err) {
+    return fail(res, 500, err.message);
+  }
 };
 
 /**
  * 비밀번호 재확인
  * @param {string} confirm_password 기존 비밀번호
- * 
+ *
  */
 const checkPassword = async (req, res) => {
-    let { confirm_password } = req.body;
-    let user_id = req.decoded.id;
-    try {
-        //비밀번호 확인
-        let result = await user.comparePassword(confirm_password, user_id);
-        if (result) {
-            //일회성 토큰 발급
-            await user.issueOneTimeToken(result).then((data) => {
-                let token = data;
-                return success(res, 200, 'Authorize success.', token);
-            });
-        }
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Incorrect password.':
-                code = 401;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { confirm_password } = req.body;
+  let user_id = req.decoded.id;
+  try {
+    //비밀번호 확인
+    let result = await user.comparePassword(confirm_password, user_id);
+    if (result) {
+      //일회성 토큰 발급
+      await user.issueOneTimeToken(result).then((data) => {
+        let token = data;
+        return success(res, 200, 'Authorize success.', token);
+      });
     }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Incorrect password.':
+        code = 401;
+        break;
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
@@ -227,32 +230,35 @@ const checkPassword = async (req, res) => {
  * @param {string} new_password 새 비밀번호
  */
 const editPassword = async (req, res) => {
-    let { new_password } = req.body;
-    let user_id = req.decoded.id;
-    try {
-        if (req.decoded.type !== 'OneTimeJWT') { throw new Error('token is invalid.'); }
-        let result = await user.updatePassword(user_id, new_password);
-        if (result.message === 'Password changed.') {
-            let data = result.user;
-            return success(res, 200, result.message, data);
-        } else {
-            throw new Error('Services error.');
-        }
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'token is invalid.':
-                code = 403;
-                break;
-            case 'Can not find profile.':
-                code = 404;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { new_password } = req.body;
+  let user_id = req.decoded.id;
+  //console.log(req.headers.authorization);
+  try {
+    if (req.decoded.type !== 'OneTimeJWT') {
+      throw new Error('token is invalid.');
     }
+    let result = await user.updatePassword(user_id, new_password);
+    if (result.message === 'Password changed.') {
+      let data = result.user;
+      return success(res, 200, result.message, data);
+    } else {
+      throw new Error('Services error.');
+    }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'token is invalid.':
+        code = 403; // 403일 경우 위치 변경
+        break;
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
@@ -260,138 +266,137 @@ const editPassword = async (req, res) => {
  * @param {string} email 사용자가 입력한 기존 비밀번호
  */
 const sendVerifyEmail = async (req, res) => {
-    let { email } = req.body
-    try {
-        let result = await user.findUser('email', email, 0);
-        if (result) {
-            // 인증번호, 캐시저장
-            let verifycode = await user.verifycode(email);
-            console.log(verifycode); // 임시
-            //인증번호 전송 메일 (비동기)
-            verifycodeMail(email, verifycode);
-            return success(res, 200);
-        } else {
-            throw new Error('Services error.');
-        }
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Can not find profile.':
-                code = 404;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { email } = req.body;
+  try {
+    let result = await user.findUser('email', email, 0);
+    if (result) {
+      // 인증번호, 캐시저장
+      let verifycode = await user.verifycode(email);
+      console.log(verifycode); // 임시
+      //인증번호 전송 메일 (비동기)
+      verifycodeMail(email, verifycode);
+      return success(res, 200);
+    } else {
+      throw new Error('Services error.');
     }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case 'Can not find profile.':
+        code = 404;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
-
 /**
- * 이메일, 인증번호 입력받아 확인 후 새 비밀번호 페이지로 넘겨줌
- * @param {string} email 사용자가 입력한 기존 비밀번호
+ * 이메일, 인증번호 입력받아 확인
+ * @param {string} email 사용자가 받는데 사용한 이메일
  * @param {number} verifycode 입력한 인증번호
  */
 const checkVerifyCode = async (req, res) => {
-    let { email, verifycode } = req.body
-    try {
-        //인증번호 확인
-        let result = user.checkCode(email, verifycode);
-        //새비밀번호 페이지로 넘기기
-        if (result) {
-            //일회성 토큰 발급
-            await user.issueOneTimeToken(email).then((data) => {
-                let token = data;
-                return success(res, 200, 'Authorize success.', token);
-            });
-        }
-    } catch (err) {
-        let code;
-        switch (err.message) {
-            case 'Code dosesn\'t match.': //401이나 403?
-            case 'Verifycode expired.':
-                code = 409;
-                break;
-            default:
-                code = 500;
-                break;
-        }
-        return fail(res, code, err.message);
+  let { email, verifycode } = req.body;
+  try {
+    //인증번호 확인
+    let result = user.checkCode(email, verifycode);
+    //새비밀번호 페이지로 넘기기
+    if (result) {
+      //일회성 토큰 발급
+      await user.issueOneTimeToken(email).then((data) => {
+        let token = data;
+        return success(res, 200, 'Authorize success.', token);
+      });
     }
+  } catch (err) {
+    let code;
+    switch (err.message) {
+      case "Code dosesn't match.": //401이나 403?
+      case 'Verifycode expired.':
+        code = 409;
+        break;
+      default:
+        code = 500;
+        break;
+    }
+    return fail(res, code, err.message);
+  }
 };
 
 /**
  * 로그인 페이지를 렌더링한다.
  */
 const viewLogin = (req, res) => {
-    res.render('user/login');
+  res.render('user/login');
 };
 
 /**
  * 회원가입 페이지를 렌더링한다.
  */
 const viewRegister = (req, res) => {
-    res.render('user/register');
+  res.render('user/register');
 };
 
 /**
  * 프로필 페이지를 렌더링한다.
  */
 const viewProfile = (req, res) => {
-    res.render('user/profile');
+  res.render('user/profile');
 };
 
 /**
  * 출석 페이지를 렌더링한다.
  */
 const viewAttend = (req, res) => {
-    const first_day = firstDay();
-    const end_date = endDate();
+  const first_day = firstDay();
+  const end_date = endDate();
 
-    res.render('user/attendance', {
-        first_day: first_day,
-        end_date: end_date,
-    });
+  res.render('user/attendance', {
+    first_day: first_day,
+    end_date: end_date,
+  });
 };
 
 /**
  * 비밀번호 확인페이지를 렌더링한다.
  */
 const viewVerifyPassword = (req, res) => {
-    res.render('user/verifyPassword');
+  res.render('user/verifyPassword');
 };
 
 /**
  * 비밀번호 변경페이지를 렌더링한다.
  */
 const viewChangePassword = (req, res) => {
-    res.render('user/newPassword');
+  res.render('user/newPassword');
 };
 
 /**
  * 메일 인증페이지를 렌더링한다.
  */
 const viewverifyEmail = (req, res) => {
-    res.render('user/verifyEmail');
+  res.render('user/verifyEmail');
 };
 
 module.exports = {
-    postLogin,
-    postRegister,
-    getProfile,
-    updateProfile,
-    postAttendance,
-    getAttendance,
-    checkPassword,
-    editPassword,
-    sendVerifyEmail,
-    checkVerifyCode,
-    viewLogin,
-    viewRegister,
-    viewProfile,
-    viewAttend,
-    viewVerifyPassword,
-    viewChangePassword,
-    viewverifyEmail,
+  postLogin,
+  postRegister,
+  getProfile,
+  updateProfile,
+  postAttendance,
+  getAttendance,
+  checkPassword,
+  editPassword,
+  sendVerifyEmail,
+  checkVerifyCode,
+  viewLogin,
+  viewRegister,
+  viewProfile,
+  viewAttend,
+  viewVerifyPassword,
+  viewChangePassword,
+  viewverifyEmail,
 };

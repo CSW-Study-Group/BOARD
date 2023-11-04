@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const random = require('crypto');
 
 const cache = require('memory-cache');
-
+const logger = require('../functions/winston');
 
 /**
  * 사용자 검색 후 return
@@ -214,7 +214,7 @@ const findAttendanceDate = async (user_id, start_date, end_date) => {
  * @param {string} confirm_password 비밀번호
  * @param {number} user_id
  *
- * @returns {string} email 
+ * @returns {string} email
  */
 const comparePassword = async (confirm_password, user_id) => {
   const user = await User.findByPk(user_id);
@@ -267,7 +267,8 @@ const verifycode = (email) => {
   let code = parseInt(random.randomBytes(2).toString('hex'), 16).toString(10);
   //캐시메모리에 저장 (캐시 메모리 너무 많이 쌓이는 경우?)
   cache.put(email, code, 300000, (key, value) => {
-    console.log('key: ' + key + ' value: ' + value + ' timeout'); // 로그로 변경필요
+    logger.info(`'verifycode is timeout. key: ${key} - value: ${value}'`);
+    //console.log('key: ' + key + ' value: ' + value + ' timeout'); // 로그로 변경필요
   }); // key: email, value: code, 300000ms (5min) 후 삭제
   return code;
 };
@@ -276,14 +277,14 @@ const verifycode = (email) => {
  * 인증번호 체크
  * @param {string} email
  * @param {number} verifycode
- * 
- * @returns {boolean} 
+ *
+ * @returns {boolean}
  */
 const checkCode = (email, verifycode) => {
   let cachecode = cache.get(email);
   if (cachecode) {
     if (parseInt(verifycode) !== parseInt(cachecode)) {
-      throw new Error('Code dosesn\'t match.');
+      throw new Error("Code dosesn't match.");
     } else {
       return true;
     }
@@ -295,14 +296,14 @@ const checkCode = (email, verifycode) => {
 /**
  * 일회용 토큰 발급
  * @param {string} email
- * 
+ *
  * @returns {object} data
  */
 const issueOneTimeToken = async (email) => {
   let user = await findUser('email', email, 1);
   let one_time_access_token = await oneTimeToken({ type: 'OneTimeJWT', id: user.id });
   return one_time_access_token;
-}
+};
 
 module.exports = {
   findUser,

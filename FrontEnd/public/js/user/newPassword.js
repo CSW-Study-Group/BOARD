@@ -31,9 +31,13 @@ function newPassword() {
         .then((res) => {
             if (res.code === 200) {
                 location.href = "/"
-            } else {
+            } else if (res.code === 500) {
                 alert(res.message);
                 location.reload();
+            } else { //403 or 404
+                alert(res.message);
+                alert("please try again.");
+                location.href = "/"
             }
         })
 
